@@ -13,9 +13,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-your-secret-key-here-change-in-production'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = [
+    'localhost', 
+    '127.0.0.1',
+    'yourusername.pythonanywhere.com',  # Replace with your PythonAnywhere username
+    '.pythonanywhere.com'
+]
 
 # Application definition
 INSTALLED_APPS = [
