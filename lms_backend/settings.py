@@ -18,7 +18,7 @@ DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 ALLOWED_HOSTS = [
     'localhost', 
     '127.0.0.1',
-    'yourusername.pythonanywhere.com',  # Replace with your PythonAnywhere username
+    'pheedev.pythonanywhere.com',
     '.pythonanywhere.com'
 ]
 
@@ -157,6 +157,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://your-frontend-domain.vercel.app",  # Add your frontend domain here
+    "https://your-frontend-domain.netlify.app",  # Add your frontend domain here
 ]
 
 CORS_ALLOW_CREDENTIALS = True
