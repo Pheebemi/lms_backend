@@ -344,6 +344,58 @@ class CourseReview(models.Model):
         return f"{self.student.full_name} - {self.course.title} ({self.rating} stars)"
 
 
+class Payment(models.Model):
+    """
+    Course payment records
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+        ('refunded', 'Refunded'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payments', limit_choices_to={'role': 'student'})
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='payments')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    currency = models.CharField(max_length=3, default='NGN')  # Nigerian Naira
+    
+    # Flutterwave specific fields
+    flutterwave_reference = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    flutterwave_transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    flutterwave_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Payment status and metadata
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    payment_method = models.CharField(max_length=50, blank=True, null=True)  # card, bank_transfer, etc.
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    paid_at = models.DateTimeField(blank=True, null=True)
+    
+    # Additional metadata
+    metadata = models.JSONField(default=dict, blank=True)  # Store additional payment data
+    
+    class Meta:
+        db_table = 'payments'
+        verbose_name = 'Payment'
+        verbose_name_plural = 'Payments'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Payment {self.flutterwave_reference} - {self.student.full_name} - {self.course.title}"
+    
+    def is_successful(self):
+        return self.status == 'completed'
+    
+    def get_amount_in_kobo(self):
+        """Convert amount to kobo (Flutterwave uses kobo)"""
+        return int(self.amount * 100)
+
+
 class Certificate(models.Model):
     """
     Course completion certificates

@@ -5,21 +5,25 @@ Django settings for lms_backend project.
 from pathlib import Path
 from datetime import timedelta
 import os
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-your-secret-key-here-change-in-production'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-your-secret-key-here-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = [
-    'localhost', 
+    'localhost',
     '127.0.0.1',
     'pheedev.pythonanywhere.com',
-    '.pythonanywhere.com'
+    '.pythonanywhere.com',
+    'algaddaftechhub.vercel.app',
+    'algaddaftechnologyhub.com',
+    'athub-beige.vercel.app'
 ]
 
 # Application definition
@@ -35,6 +39,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'authentication',
     'courses',
+    'blog',
 ]
 
 MIDDLEWARE = [
@@ -46,6 +51,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'lms_backend.urls'
@@ -157,13 +163,44 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://your-frontend-domain.vercel.app",  # Add your frontend domain here
-    "https://your-frontend-domain.netlify.app",  # Add your frontend domain here
+    "https://algaddaftechnologyhub.com",  # Your Vercel domain
+    "https://algaddaftechhub.vercel.app",
+    "https://athub-beige.vercel.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all origins in development
+
+# Email Configuration - Use DEBUG to control email backend
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='lemuelemmanuel29@gmail.com')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='rpdceoywlbcxddoy')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='lemuelemmanuel29@gmail.com')
+
+if DEBUG:
+    # Development - use console
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    # Production - send real emails
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# Flutterwave Configuration
+FLUTTERWAVE_PUBLIC_KEY = config('FLUTTERWAVE_PUBLIC_KEY', default='')
+FLUTTERWAVE_SECRET_KEY = config('FLUTTERWAVE_SECRET_KEY', default='')
+FLUTTERWAVE_ENCRYPTION_KEY = config('FLUTTERWAVE_ENCRYPTION_KEY', default='')
+
+# Frontend URL for payment redirects
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+
+# WhiteNoise Configuration
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Serve media files with WhiteNoise
+# WHITENOISE_USE_FINDERS = True
+# WHITENOISE_AUTOREFRESH = True
 
 
 

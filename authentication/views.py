@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import login
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import User, StudentProfile, TutorProfile, AdminProfile, EmailVerificationOTP
 from .serializers import (
     UserRegistrationSerializer, UserLoginSerializer, UserSerializer,
@@ -48,14 +50,63 @@ class RegisterView(generics.CreateAPIView):
         # Generate OTP for email verification
         otp = EmailVerificationOTP.generate_otp(user, user.email)
         
-        # Print OTP to console for development
-        print(f"\n{'='*50}")
-        print(f"EMAIL VERIFICATION OTP")
-        print(f"{'='*50}")
-        print(f"Email: {user.email}")
-        print(f"OTP Code: {otp.otp_code}")
-        print(f"Expires at: {otp.expires_at}")
-        print(f"{'='*50}\n")
+        # Send OTP via email
+        try:
+            send_mail(
+                subject='🔐 Email Verification - Algaddaf Technology Hub',
+                message=f'''
+🚀 Welcome to Algaddaf Technology Hub!
+
+Hello {user.first_name},
+
+Thank you for joining our Learning Management System! To complete your registration, please verify your email address using the OTP code below:
+
+┌─────────────────────────────────┐
+│  🔐 Your Verification Code:     │
+│  {otp.otp_code}                 │
+└─────────────────────────────────┘
+
+⏰ This code will expire at: {otp.expires_at}
+
+📝 Instructions:
+1. Copy the 6-digit code above
+2. Return to the verification page
+3. Enter the code to activate your account
+
+🔒 Security Note:
+- This code is valid for 10 minutes only
+- Never share this code with anyone
+- If you didn't request this, please ignore this email
+
+🎓 Once verified, you'll have access to:
+• Browse and enroll in courses
+• Take interactive lessons
+• Complete quizzes and assessments
+• Earn certificates upon completion
+• Track your learning progress
+
+Best regards,
+The Algaddaf Technology Hub Team
+
+---
+Algaddaf Technology Hub
+Empowering Education Through Technology
+                ''',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+            print(f"✅ OTP sent to {user.email}")
+        except Exception as e:
+            print(f"❌ Failed to send email to {user.email}: {e}")
+            # Fallback to console for debugging
+            print(f"\n{'='*50}")
+            print(f"EMAIL VERIFICATION OTP (FALLBACK)")
+            print(f"{'='*50}")
+            print(f"Email: {user.email}")
+            print(f"OTP Code: {otp.otp_code}")
+            print(f"Expires at: {otp.expires_at}")
+            print(f"{'='*50}\n")
         
         return Response({
             'message': 'User registered successfully. Please verify your email.',
@@ -257,14 +308,59 @@ def resend_otp(request):
     # Generate new OTP
     otp = EmailVerificationOTP.generate_otp(user, email)
     
-    # Print OTP to console for development
-    print(f"\n{'='*50}")
-    print(f"RESEND EMAIL VERIFICATION OTP")
-    print(f"{'='*50}")
-    print(f"Email: {email}")
-    print(f"OTP Code: {otp.otp_code}")
-    print(f"Expires at: {otp.expires_at}")
-    print(f"{'='*50}\n")
+    # Send OTP via email
+    try:
+        send_mail(
+            subject='🔄 New Verification Code - Algaddaf Technology Hub',
+            message=f'''
+🔄 New Verification Code Request
+
+Hello {user.first_name},
+
+You've requested a new verification code for your Algaddaf Technology Hub account. Here's your fresh OTP:
+
+┌─────────────────────────────────┐
+│  🔐 Your New Verification Code: │
+│  {otp.otp_code}                 │
+└─────────────────────────────────┘
+
+⏰ This code will expire at: {otp.expires_at}
+
+📝 Quick Steps:
+1. Copy the 6-digit code above
+2. Return to the verification page
+3. Enter the new code to verify your account
+
+🔒 Security Reminder:
+- This is a new code - the previous one is no longer valid
+- Never share this code with anyone
+- If you didn't request this, please contact support
+
+🎓 Ready to start learning?
+Once verified, you'll have full access to our courses and learning materials!
+
+Best regards,
+The Algaddaf Technology Hub Team
+
+---
+Algaddaf Technology Hub
+Empowering Education Through Technology
+            ''',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+        print(f"✅ Resend OTP sent to {email}")
+    except Exception as e:
+        print(f"❌ Failed to resend email to {email}: {e}")
+        # Fallback to console for debugging
+        print(f"\n{'='*50}")
+        print(f"RESEND EMAIL VERIFICATION OTP (FALLBACK)")
+        print(f"{'='*50}")
+        print(f"Email: {email}")
+        print(f"OTP Code: {otp.otp_code}")
+        print(f"Expires at: {otp.expires_at}")
+        print(f"{'='*50}\n")
     
     return Response({
         'message': 'OTP sent successfully',

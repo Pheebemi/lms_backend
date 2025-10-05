@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from . import payment_views
+from . import mock_payment_views
 
 app_name = 'courses'
 
@@ -57,6 +59,16 @@ urlpatterns = [
     path('student/certificates/', views.get_student_certificates, name='student-certificates'),
     path('student/certificates/generate/<int:enrollment_id>/', views.generate_certificate, name='generate-certificate'),
     path('student/certificates/<int:certificate_id>/', views.get_certificate_detail, name='certificate-detail'),
+    
+    # Payments
+    path('payments/initiate/', payment_views.initiate_payment, name='initiate-payment'),
+    path('payments/verify/', payment_views.verify_payment, name='verify-payment'),
+    path('payments/history/', payment_views.payment_history, name='payment-history'),
+    path('payments/<uuid:payment_id>/status/', payment_views.payment_status, name='payment-status'),
+    
+    # Mock Payments (for local development)
+    path('mock-payments/initiate/', mock_payment_views.mock_initiate_payment, name='mock-initiate-payment'),
+    path('mock-payments/verify/', mock_payment_views.mock_verify_payment, name='mock-verify-payment'),
 ]
 
 

@@ -110,3 +110,7 @@ python3.10 manage.py collectstatic
 - Free accounts have limited CPU seconds per month
 - Database is SQLite (sufficient for testing)
 - For production, consider upgrading to paid plan
+
+
+
+

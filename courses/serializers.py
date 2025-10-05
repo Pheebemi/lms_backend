@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import (
     Category, Course, Lesson, Quiz, QuizQuestion,
-    Enrollment, LessonProgress, QuizAttempt, QuizAnswer, CourseReview, Certificate
+    Enrollment, LessonProgress, QuizAttempt, QuizAnswer, CourseReview, Certificate, Payment
 )
 
 User = get_user_model()

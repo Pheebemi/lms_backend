@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Category, Course, Lesson, Quiz, QuizQuestion,
-    Enrollment, LessonProgress, QuizAttempt, QuizAnswer, CourseReview
+    Enrollment, LessonProgress, QuizAttempt, QuizAnswer, CourseReview, Payment
 )
 
 
@@ -80,6 +80,35 @@ class CourseReviewAdmin(admin.ModelAdmin):
     list_filter = ['rating', 'created_at', 'course']
     search_fields = ['student__first_name', 'student__last_name', 'course__title', 'review_text']
     readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ['student', 'course', 'amount', 'currency', 'status', 'payment_method', 'created_at', 'paid_at']
+    list_filter = ['status', 'currency', 'payment_method', 'created_at', 'paid_at']
+    search_fields = ['student__first_name', 'student__last_name', 'course__title', 'flutterwave_reference', 'flutterwave_transaction_id']
+    readonly_fields = ['id', 'created_at', 'updated_at', 'paid_at']
+    ordering = ['-created_at']
+    
+    fieldsets = (
+        ('Payment Info', {
+            'fields': ('student', 'course', 'amount', 'currency', 'status')
+        }),
+        ('Flutterwave Details', {
+            'fields': ('flutterwave_reference', 'flutterwave_transaction_id', 'flutterwave_payment_id', 'payment_method')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at', 'paid_at'),
+            'classes': ('collapse',)
+        }),
+        ('Metadata', {
+            'fields': ('metadata',),
+            'classes': ('collapse',)
+        })
+    )
+
+
+
 
 
 
