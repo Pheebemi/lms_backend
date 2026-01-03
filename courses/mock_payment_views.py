@@ -50,9 +50,12 @@ def mock_initiate_payment(request):
             course=course,
             amount=amount,
             currency=currency,
-            status='pending',
-            flutterwave_reference=f"MOCK-{payment.id}"
+            status='pending'
         )
+        
+        # Set the flutterwave reference after payment is created
+        payment.flutterwave_reference = f"MOCK-{payment.id}"
+        payment.save()
         
         # Return mock payment URL
         return Response({
@@ -101,7 +104,12 @@ def mock_verify_payment(request):
         payment.save()
         
         # Enroll user in the course
-        Enrollment.objects.get_or_create(student=request.user, course=payment.course)
+        enrollment, created = Enrollment.objects.get_or_create(student=request.user, course=payment.course)
+        
+        # Update course student count if new enrollment
+        if created:
+            payment.course.total_students += 1
+            payment.course.save(update_fields=['total_students'])
         
         return Response({
             'message': 'Mock payment verified and course enrolled successfully!'
@@ -116,4 +124,7 @@ def mock_verify_payment(request):
             'error': 'An error occurred while verifying payment',
             'details': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
 

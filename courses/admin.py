@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Category, Course, Lesson, Quiz, QuizQuestion,
-    Enrollment, LessonProgress, QuizAttempt, QuizAnswer, CourseReview, Payment
+    Enrollment, LessonProgress, QuizAttempt, QuizAnswer, CourseReview, Payment, Certificate
 )
 
 
@@ -106,6 +106,27 @@ class PaymentAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         })
     )
+
+
+@admin.register(Certificate)
+class CertificateAdmin(admin.ModelAdmin):
+    list_display = ['certificate_id', 'student', 'course', 'issued_at', 'is_verified']
+    list_filter = ['is_verified', 'issued_at', 'course']
+    search_fields = ['certificate_id', 'student__first_name', 'student__last_name', 'course__title']
+    readonly_fields = ['certificate_id', 'issued_at']
+    ordering = ['-issued_at']
+    
+    fieldsets = (
+        ('Certificate Info', {
+            'fields': ('student', 'course', 'enrollment', 'certificate_id')
+        }),
+        ('Certificate Details', {
+            'fields': ('issued_at', 'is_verified', 'pdf_file')
+        }),
+    )
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('student', 'course', 'enrollment')
 
 
 

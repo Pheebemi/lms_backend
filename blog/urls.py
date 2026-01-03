@@ -21,3 +21,6 @@ urlpatterns = [
     path('admin/comments/<int:comment_id>/approve/', views.approve_comment, name='approve_comment'),
     path('admin/stats/', views.admin_blog_stats, name='admin_blog_stats'),
 ]
+
+
+

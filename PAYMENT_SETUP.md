@@ -71,3 +71,6 @@ FRONTEND_URL=https://algaddaftechhub.vercel.app
 - Free courses show "Enroll Now" button
 - Paid courses show "Buy Now" and "Preview" buttons
 
+
+
+

@@ -73,3 +73,6 @@ def blog_stats_widget(request):
         ''',
         **stats
     )
+
+
+

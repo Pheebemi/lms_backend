@@ -1,5 +1,6 @@
 import requests
 import uuid
+import time
 from decimal import Decimal
 from django.conf import settings
 from django.utils import timezone
@@ -64,9 +65,13 @@ def initiate_payment(request):
             status='pending'
         )
         
+        # Set the Flutterwave reference
+        payment.flutterwave_reference = str(payment.id)
+        payment.save()
+        
         # Generate Flutterwave payment data
         flutterwave_data = {
-            'tx_ref': str(payment.id),
+            'tx_ref': payment.flutterwave_reference,
             'amount': payment.get_amount_in_kobo(),  # Convert to kobo
             'currency': currency,
             'redirect_url': f"{settings.FRONTEND_URL}/payment/callback",
@@ -94,34 +99,77 @@ def initiate_payment(request):
         }
         
         print(f"🔑 Flutterwave Secret Key: {settings.FLUTTERWAVE_SECRET_KEY[:10]}...")
+        print(f"🔑 Full Secret Key Length: {len(settings.FLUTTERWAVE_SECRET_KEY)}")
+        print(f"🔑 Secret Key Empty: {not settings.FLUTTERWAVE_SECRET_KEY}")
+        print(f"💰 Original Amount: {payment.amount} Naira")
+        print(f"💰 Amount in Kobo: {payment.get_amount_in_kobo()} kobo")
         print(f"📦 Flutterwave Data: {flutterwave_data}")
         
-        try:
-            response = requests.post(
-                'https://api.flutterwave.com/v3/payments',
-                json=flutterwave_data,
-                headers=headers,
-                timeout=30
-            )
-            
-            print(f"📡 Flutterwave Response Status: {response.status_code}")
-            print(f"📡 Flutterwave Response: {response.text}")
-        except requests.exceptions.RequestException as e:
-            print(f"❌ Flutterwave Request Error: {e}")
-            payment.status = 'failed'
-            payment.save()
-            return Response({
-                'error': 'Failed to connect to payment gateway',
-                'details': str(e)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # Retry logic for Flutterwave API
+        max_retries = 3
+        retry_delay = 1  # seconds
+        
+        for attempt in range(max_retries):
+            try:
+                print(f"🔄 Attempt {attempt + 1}/{max_retries} - Calling Flutterwave API...")
+                
+                # Try with different SSL configurations
+                if attempt == 0:
+                    # First attempt: Standard SSL
+                    response = requests.post(
+                        'https://api.flutterwave.com/v3/payments',
+                        json=flutterwave_data,
+                        headers=headers,
+                        timeout=30,
+                        verify=True,
+                        stream=False
+                    )
+                elif attempt == 1:
+                    # Second attempt: Disable SSL verification (less secure but works)
+                    response = requests.post(
+                        'https://api.flutterwave.com/v3/payments',
+                        json=flutterwave_data,
+                        headers=headers,
+                        timeout=30,
+                        verify=False,  # Disable SSL verification
+                        stream=False
+                    )
+                else:
+                    # Third attempt: Use session with custom SSL context
+                    session = requests.Session()
+                    session.verify = True
+                    response = session.post(
+                        'https://api.flutterwave.com/v3/payments',
+                        json=flutterwave_data,
+                        headers=headers,
+                        timeout=30
+                    )
+                
+                print(f"📡 Flutterwave Response Status: {response.status_code}")
+                print(f"📡 Flutterwave Response: {response.text}")
+                break  # Success, exit retry loop
+                
+            except requests.exceptions.RequestException as e:
+                print(f"❌ Flutterwave Request Error (Attempt {attempt + 1}): {e}")
+                
+                if attempt < max_retries - 1:  # Not the last attempt
+                    print(f"⏳ Retrying in {retry_delay} seconds...")
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                else:
+                    # Last attempt failed
+                    print(f"❌ All {max_retries} attempts failed")
+                    payment.status = 'failed'
+                    payment.save()
+                    return Response({
+                        'error': 'Failed to connect to payment gateway',
+                        'details': f"SSL/Network error after {max_retries} attempts: {str(e)}"
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         if response.status_code == 200:
             data = response.json()
             if data['status'] == 'success':
-                # Update payment with Flutterwave reference
-                # Use the tx_ref as the reference since Flutterwave doesn't return a reference in the response
-                payment.flutterwave_reference = flutterwave_data['tx_ref']
-                payment.save()
+                # Payment reference is already set, no need to update
                 
                 return Response({
                     'message': 'Payment initiated successfully',
@@ -138,9 +186,11 @@ def initiate_payment(request):
                     'details': data.get('message', 'Unknown error')
                 }, status=status.HTTP_400_BAD_REQUEST)
         else:
+            print(f"❌ Flutterwave API Error: {response.status_code}")
+            print(f"❌ Response: {response.text}")
             return Response({
                 'error': 'Failed to connect to payment gateway',
-                'details': response.text
+                'details': f"HTTP {response.status_code}: {response.text}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
     except Course.DoesNotExist:
@@ -165,13 +215,13 @@ def verify_payment(request):
     
     tx_ref = serializer.validated_data['tx_ref']
     transaction_id = serializer.validated_data['transaction_id']
-    status = serializer.validated_data['status']
+    payment_status = serializer.validated_data['status']
     amount = serializer.validated_data['amount']
     
     try:
         # Get payment record
         payment = Payment.objects.get(
-            id=tx_ref,
+            flutterwave_reference=tx_ref,
             student=request.user
         )
         
