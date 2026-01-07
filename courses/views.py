@@ -643,7 +643,7 @@ def get_student_certificates(request):
         student=request.user
     ).select_related('course', 'enrollment').order_by('-issued_at')
     
-    serializer = CertificateSerializer(certificates, many=True)
+    serializer = CertificateSerializer(certificates, many=True, context={'request': request})
     return Response(serializer.data)
 
 
@@ -675,22 +675,38 @@ def generate_certificate(request, enrollment_id):
             }
         )
         
+        # Generate PNG certificate image if it doesn't exist or if newly created
+        if not certificate.image_file or created:
+            from .certificate_generator import save_certificate_image
+            
+            student_name = f"{request.user.first_name} {request.user.last_name}"
+            certificate_id = certificate.certificate_id
+            
+            save_certificate_image(
+                certificate=certificate,
+                student_name=student_name,
+                course_title=enrollment.course.title,
+                certificate_id=certificate_id,
+                issued_date=certificate.issued_at
+            )
+        
+        serializer = CertificateSerializer(certificate, context={'request': request})
+        
         if created:
-            serializer = CertificateSerializer(certificate)
             return Response({
                 'message': 'Certificate generated successfully',
                 'certificate': serializer.data
             }, status=status.HTTP_201_CREATED)
         else:
-            serializer = CertificateSerializer(certificate)
             return Response({
                 'message': 'Certificate already exists',
                 'certificate': serializer.data
             }, status=status.HTTP_200_OK)
             
     except Exception as e:
+        import traceback
         return Response(
-            {'error': str(e)},
+            {'error': str(e), 'traceback': traceback.format_exc()},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -783,7 +799,7 @@ def get_student_certificates(request):
         student=request.user
     ).select_related('course', 'enrollment').order_by('-issued_at')
     
-    serializer = CertificateSerializer(certificates, many=True)
+    serializer = CertificateSerializer(certificates, many=True, context={'request': request})
     return Response(serializer.data)
 
 
@@ -815,22 +831,38 @@ def generate_certificate(request, enrollment_id):
             }
         )
         
+        # Generate PNG certificate image if it doesn't exist or if newly created
+        if not certificate.image_file or created:
+            from .certificate_generator import save_certificate_image
+            
+            student_name = f"{request.user.first_name} {request.user.last_name}"
+            certificate_id = certificate.certificate_id
+            
+            save_certificate_image(
+                certificate=certificate,
+                student_name=student_name,
+                course_title=enrollment.course.title,
+                certificate_id=certificate_id,
+                issued_date=certificate.issued_at
+            )
+        
+        serializer = CertificateSerializer(certificate, context={'request': request})
+        
         if created:
-            serializer = CertificateSerializer(certificate)
             return Response({
                 'message': 'Certificate generated successfully',
                 'certificate': serializer.data
             }, status=status.HTTP_201_CREATED)
         else:
-            serializer = CertificateSerializer(certificate)
             return Response({
                 'message': 'Certificate already exists',
                 'certificate': serializer.data
             }, status=status.HTTP_200_OK)
             
     except Exception as e:
+        import traceback
         return Response(
-            {'error': str(e)},
+            {'error': str(e), 'traceback': traceback.format_exc()},
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -931,7 +963,7 @@ def get_student_certificates(request):
         student=request.user
     ).select_related('course', 'enrollment').order_by('-issued_at')
     
-    serializer = CertificateSerializer(certificates, many=True)
+    serializer = CertificateSerializer(certificates, many=True, context={'request': request})
     return Response(serializer.data)
 
 
@@ -963,22 +995,38 @@ def generate_certificate(request, enrollment_id):
             }
         )
         
+        # Generate PNG certificate image if it doesn't exist or if newly created
+        if not certificate.image_file or created:
+            from .certificate_generator import save_certificate_image
+            
+            student_name = f"{request.user.first_name} {request.user.last_name}"
+            certificate_id = certificate.certificate_id
+            
+            save_certificate_image(
+                certificate=certificate,
+                student_name=student_name,
+                course_title=enrollment.course.title,
+                certificate_id=certificate_id,
+                issued_date=certificate.issued_at
+            )
+        
+        serializer = CertificateSerializer(certificate, context={'request': request})
+        
         if created:
-            serializer = CertificateSerializer(certificate)
             return Response({
                 'message': 'Certificate generated successfully',
                 'certificate': serializer.data
             }, status=status.HTTP_201_CREATED)
         else:
-            serializer = CertificateSerializer(certificate)
             return Response({
                 'message': 'Certificate already exists',
                 'certificate': serializer.data
             }, status=status.HTTP_200_OK)
             
     except Exception as e:
+        import traceback
         return Response(
-            {'error': str(e)},
+            {'error': str(e), 'traceback': traceback.format_exc()},
             status=status.HTTP_400_BAD_REQUEST
         )
 

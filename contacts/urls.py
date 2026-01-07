@@ -13,3 +13,5 @@ urlpatterns = [
     path('admin/stats/', views.contact_stats, name='admin_contact_stats'),
 ]
 
+
+

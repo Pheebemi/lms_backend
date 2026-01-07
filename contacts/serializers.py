@@ -62,3 +62,5 @@ class ContactSubmissionDetailSerializer(serializers.ModelSerializer):
     def get_full_name(self, obj):
         return obj.full_name
 
+
+

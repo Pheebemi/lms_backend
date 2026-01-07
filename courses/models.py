@@ -392,8 +392,8 @@ class Payment(models.Model):
         return self.status == 'completed'
     
     def get_amount_in_kobo(self):
-        """Convert amount to kobo (Flutterwave uses kobo)"""
-        return int(self.amount * 100)
+        """Get amount for Flutterwave (Flutterwave v3 expects amount in main currency unit, not kobo)"""
+        return float(self.amount)
 
 
 class Certificate(models.Model):
@@ -406,6 +406,7 @@ class Certificate(models.Model):
     certificate_id = models.CharField(max_length=50, unique=True)
     issued_at = models.DateTimeField(auto_now_add=True)
     pdf_file = models.FileField(upload_to='certificates/', blank=True, null=True)
+    image_file = models.ImageField(upload_to='certificates/', blank=True, null=True)
     is_verified = models.BooleanField(default=True)
     
     class Meta:

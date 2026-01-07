@@ -72,7 +72,7 @@ def initiate_payment(request):
         # Generate Flutterwave payment data
         flutterwave_data = {
             'tx_ref': payment.flutterwave_reference,
-            'amount': payment.get_amount_in_kobo(),  # Convert to kobo
+            'amount': payment.get_amount_in_kobo(),  # Amount in main currency unit (NGN)
             'currency': currency,
             'redirect_url': f"{settings.FRONTEND_URL}/payment/callback",
             'customer': {
@@ -102,7 +102,7 @@ def initiate_payment(request):
         print(f"🔑 Full Secret Key Length: {len(settings.FLUTTERWAVE_SECRET_KEY)}")
         print(f"🔑 Secret Key Empty: {not settings.FLUTTERWAVE_SECRET_KEY}")
         print(f"💰 Original Amount: {payment.amount} Naira")
-        print(f"💰 Amount in Kobo: {payment.get_amount_in_kobo()} kobo")
+        print(f"💰 Amount for Flutterwave: {payment.get_amount_in_kobo()} {currency}")
         print(f"📦 Flutterwave Data: {flutterwave_data}")
         
         # Retry logic for Flutterwave API

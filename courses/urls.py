@@ -1,5 +1,6 @@
-from django.urls import path
+from django.urls import path, re_path
 from . import views
+from . import certificate_views
 from . import payment_views
 from . import mock_payment_views
 
@@ -59,6 +60,9 @@ urlpatterns = [
     path('student/certificates/', views.get_student_certificates, name='student-certificates'),
     path('student/certificates/generate/<int:enrollment_id>/', views.generate_certificate, name='generate-certificate'),
     path('student/certificates/<int:certificate_id>/', views.get_certificate_detail, name='certificate-detail'),
+    
+    # Certificate Images (serve with proper headers)
+    re_path(r'^certificates/images/(?P<path>.*)$', certificate_views.serve_certificate_image, name='certificate-image'),
     
     # Payments
     path('payments/initiate/', payment_views.initiate_payment, name='initiate-payment'),
