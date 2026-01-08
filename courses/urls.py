@@ -49,6 +49,7 @@ urlpatterns = [
     path('tutor/courses/', views.get_tutor_courses, name='tutor-courses'),
     path('tutor/courses/<uuid:course_id>/', views.get_tutor_course_detail, name='tutor-course-detail'),
     path('tutor/courses/<uuid:course_id>/lessons/<uuid:lesson_id>/', views.get_tutor_lesson_detail, name='tutor-lesson-detail'),
+    path('tutor/courses/<uuid:course_id>/lessons/<uuid:lesson_id>/generate-quiz/', views.auto_generate_quiz, name='auto-generate-quiz'),
     path('tutor/courses/<uuid:course_id>/stats/', views.get_tutor_course_stats, name='tutor-course-stats'),
     path('tutor/dashboard/', views.get_tutor_dashboard_stats, name='tutor-dashboard-stats'),
     

@@ -490,6 +490,69 @@ def get_quiz_attempts(request, quiz_id):
     return Response(serializer.data)
 
 
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def auto_generate_quiz(request, course_id, lesson_id):
+    """Auto-generate quiz for a lesson"""
+    if not request.user.is_tutor():
+        return Response(
+            {'error': 'Only tutors can generate quizzes'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        lesson = get_object_or_404(Lesson, id=lesson_id, course_id=course_id, course__instructor=request.user)
+
+        # Check if lesson already has a quiz
+        if hasattr(lesson, 'quiz'):
+            return Response(
+                {'error': 'Lesson already has a quiz'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Get parameters from request
+        num_questions = request.data.get('num_questions', 5)
+        difficulty = request.data.get('difficulty', 'medium')
+
+        # Validate parameters
+        if not isinstance(num_questions, int) or num_questions < 1 or num_questions > 20:
+            return Response(
+                {'error': 'Number of questions must be between 1 and 20'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if difficulty not in ['easy', 'medium', 'hard']:
+            return Response(
+                {'error': 'Difficulty must be easy, medium, or hard'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Import the quiz generation logic
+        from .management.commands.generate_quiz import Command
+        cmd = Command()
+
+        # Generate the quiz
+        quiz = cmd.create_quiz_for_lesson(lesson, num_questions, difficulty)
+
+        # Return the created quiz data
+        serializer = QuizDetailSerializer(quiz)
+        return Response({
+            'message': f'Quiz generated successfully with {num_questions} questions',
+            'quiz': serializer.data
+        }, status=status.HTTP_201_CREATED)
+
+    except Lesson.DoesNotExist:
+        return Response(
+            {'error': 'Lesson not found or you do not have permission to modify it'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to generate quiz: {str(e)}'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
 # Course Review Views
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
