@@ -9,7 +9,7 @@ from datetime import datetime
 import os
 
 
-def generate_certificate_png(student_name, course_title, certificate_id, issued_date=None):
+def generate_certificate_png(student_name, course_title, certificate_id, issued_date=None, completed_date=None):
     """
     Generate a PNG certificate using your custom design
 
@@ -73,6 +73,14 @@ def generate_certificate_png(student_name, course_title, certificate_id, issued_
     draw.text((student_name_x, student_name_y), student_name.upper(),  # Convert to uppercase
               fill='#000000', font=student_name_font, anchor='mm')  # Center anchor
 
+    # Completion Date - below the student name
+    if completed_date:
+        completion_date_x = 1280  # Center horizontally
+        completion_date_y = 920 # CHANGE THIS: Position below student name (increase to move down, decrease to move up)
+        completion_text = completed_date.strftime('%B %d, %Y')  # Just the date, no "Completed on"
+        draw.text((completion_date_x, completion_date_y), completion_text,
+                  fill='#000000', font=certificate_id_font, anchor='mm')  # Same size as certificate ID
+
     # Course Name - REMOVED for now, will add back later
     # course_name_x = 1000   # Center horizontally
     # course_name_y = 750    # ADJUST THIS: Increase to move down, decrease to move up
@@ -96,7 +104,7 @@ def generate_certificate_png(student_name, course_title, certificate_id, issued_
     return img_buffer
 
 
-def save_certificate_image(certificate, student_name, course_title, certificate_id, issued_date=None):
+def save_certificate_image(certificate, student_name, course_title, certificate_id, issued_date=None, completed_date=None):
     """
     Generate and save certificate PNG to the certificate model
     
@@ -115,7 +123,8 @@ def save_certificate_image(certificate, student_name, course_title, certificate_
         student_name=student_name,
         course_title=course_title,
         certificate_id=certificate_id,
-        issued_date=issued_date
+        issued_date=issued_date,
+        completed_date=completed_date
     )
     
     # Create filename

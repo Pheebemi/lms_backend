@@ -750,7 +750,8 @@ def generate_certificate(request, enrollment_id):
                 student_name=student_name,
                 course_title=enrollment.course.title,
                 certificate_id=certificate_id,
-                issued_date=certificate.issued_at
+                issued_date=certificate.issued_at,
+                completed_date=enrollment.completed_at
             )
         
         serializer = CertificateSerializer(certificate, context={'request': request})
@@ -906,7 +907,8 @@ def generate_certificate(request, enrollment_id):
                 student_name=student_name,
                 course_title=enrollment.course.title,
                 certificate_id=certificate_id,
-                issued_date=certificate.issued_at
+                issued_date=certificate.issued_at,
+                completed_date=enrollment.completed_at
             )
         
         serializer = CertificateSerializer(certificate, context={'request': request})
@@ -1070,7 +1072,8 @@ def generate_certificate(request, enrollment_id):
                 student_name=student_name,
                 course_title=enrollment.course.title,
                 certificate_id=certificate_id,
-                issued_date=certificate.issued_at
+                issued_date=certificate.issued_at,
+                completed_date=enrollment.completed_at
             )
         
         serializer = CertificateSerializer(certificate, context={'request': request})
