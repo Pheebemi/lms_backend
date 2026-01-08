@@ -671,7 +671,7 @@ def generate_certificate(request, enrollment_id):
             course=enrollment.course,
             enrollment=enrollment,
             defaults={
-                'certificate_id': f"CERT-{enrollment.id}-{request.user.id}-{enrollment.course.id}"
+                'certificate_id': f"C{abs(hash(str(enrollment.id))) % 10000:04d}"  # 5 characters: C + 4-digit number
             }
         )
         
@@ -827,7 +827,7 @@ def generate_certificate(request, enrollment_id):
             course=enrollment.course,
             enrollment=enrollment,
             defaults={
-                'certificate_id': f"CERT-{enrollment.id}-{request.user.id}-{enrollment.course.id}"
+                'certificate_id': f"C{abs(hash(str(enrollment.id))) % 10000:04d}"  # 5 characters: C + 4-digit number
             }
         )
         
@@ -991,7 +991,7 @@ def generate_certificate(request, enrollment_id):
             course=enrollment.course,
             enrollment=enrollment,
             defaults={
-                'certificate_id': f"CERT-{enrollment.id}-{request.user.id}-{enrollment.course.id}"
+                'certificate_id': f"C{abs(hash(str(enrollment.id))) % 10000:04d}"  # 5 characters: C + 4-digit number
             }
         )
         

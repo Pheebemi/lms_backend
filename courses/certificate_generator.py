@@ -69,7 +69,7 @@ def generate_certificate_png(student_name, course_title, certificate_id, issued_
     # Add text overlays on your template (CUSTOMIZE THESE COORDINATES FOR YOUR DESIGN)
     # Student Name - adjust x, y coordinates to match your template's name field
     student_name_x = 1000  # Center horizontally (half of 2000px width)
-    student_name_y = 600   # ADJUST THIS: Increase to move down, decrease to move up
+    student_name_y = 620   # ADJUST THIS: Increase to move down, decrease to move up
     draw.text((student_name_x, student_name_y), student_name.upper(),  # Convert to uppercase
               fill='#000000', font=student_name_font, anchor='mm')  # Center anchor
 
@@ -80,8 +80,8 @@ def generate_certificate_png(student_name, course_title, certificate_id, issued_
     #           fill='#000000', font=course_name_font, anchor='mm')  # Center anchor
 
     # Certificate ID - shortened and moved to top left
-    certificate_id_x = 100  # Top left (adjust as needed)
-    certificate_id_y = 100  # Top left (adjust as needed)
+    certificate_id_x = 400  # CHANGE THIS: Increase to move RIGHT, decrease to move LEFT
+    certificate_id_y = 420 # CHANGE THIS: Increase to move DOWN, decrease to move UP
     draw.text((certificate_id_x, certificate_id_y), certificate_id,  # Just the ID, no "Certificate ID:" text
               fill='#666666', font=certificate_id_font, anchor='lt')  # Left-top anchor
 
