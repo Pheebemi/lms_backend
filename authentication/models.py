@@ -14,10 +14,11 @@ class User(AbstractUser):
         ('student', 'Student'),
         ('tutor', 'Tutor'),
         ('admin', 'Admin'),
+        ('management', 'Management'),
     ]
-    
+
     email = models.EmailField(unique=True)
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='student')
+    role = models.CharField(max_length=15, choices=ROLE_CHOICES, default='student')
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
@@ -48,6 +49,9 @@ class User(AbstractUser):
     
     def is_admin(self):
         return self.role == 'admin'
+
+    def is_management(self):
+        return self.role == 'management'
 
 
 class StudentProfile(models.Model):
