@@ -1,0 +1,62 @@
+# ── Python ────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+
+# ── Virtual environment ───────────────────────────────────────────────────
+venv/
+env/
+.venv/
+.env/
+ENV/
+
+# ── Django ────────────────────────────────────────────────────────────────
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# ── Media & user uploads ──────────────────────────────────────────────────
+media/
+
+# ── Static files (collected) ──────────────────────────────────────────────
+staticfiles/
+static_root/
+
+# ── Environment variables — NEVER commit secrets ─────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Test / debug scripts ──────────────────────────────────────────────────
+test_email.py
+test_production_email.py
+test_real_email.py
+test_*.py
+
+# ── Compiled / distribution ───────────────────────────────────────────────
+*.egg-info/
+dist/
+build/
+*.egg
+MANIFEST
+
+# ── Coverage & testing ────────────────────────────────────────────────────
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.pytest_cache/
+.tox/
+
+# ── IDE & OS ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
