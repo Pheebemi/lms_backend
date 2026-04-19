@@ -23,12 +23,26 @@ class IsManagementOrAdmin(permissions.BasePermission):
 # ── Course Catalog ──────────────────────────────────────────────────────────
 
 class CourseCatalogListView(generics.ListAPIView):
-    """List of active courses with prices — used by the enrollment form."""
+    """List of active courses — used by the enrollment form dropdown."""
     serializer_class = CourseCatalogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return CourseCatalog.objects.filter(is_active=True)
+
+
+class CourseCatalogAdminListCreateView(generics.ListCreateAPIView):
+    """All courses (including inactive) — management/admin only."""
+    serializer_class = CourseCatalogSerializer
+    permission_classes = [IsManagementOrAdmin]
+    queryset = CourseCatalog.objects.all()
+
+
+class CourseCatalogAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete a single course — management/admin only."""
+    serializer_class = CourseCatalogSerializer
+    permission_classes = [IsManagementOrAdmin]
+    queryset = CourseCatalog.objects.all()
 
 
 # ── Student Records ─────────────────────────────────────────────────────────
