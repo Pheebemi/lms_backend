@@ -76,6 +76,13 @@ class StudentRecordListCreateView(generics.ListCreateAPIView):
                 Q(id_no__icontains=search)
             )
 
+        month = self.request.query_params.get('month')
+        year = self.request.query_params.get('year')
+        if year:
+            qs = qs.filter(created_at__year=year)
+        if month:
+            qs = qs.filter(created_at__month=month)
+
         return qs
 
     def perform_create(self, serializer):
