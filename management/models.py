@@ -1,6 +1,13 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 import uuid
+import re
+
+
+def _parse_months(duration_str: str) -> int:
+    """Extract number of months from a string like '4 Months' or '6 months'."""
+    m = re.search(r'(\d+)', str(duration_str or ''))
+    return int(m.group(1)) if m else 1
 
 User = get_user_model()
 
@@ -91,7 +98,12 @@ class StudentRecord(models.Model):
         return f"{self.first_name} {self.last_name}"
 
     def save(self, *args, **kwargs):
-        # Auto-calculate: IT/NYSC pay 50%, others pay full
+        # Total fee = price per month × number of months
+        duration_str = self.duration_of_training or (self.course.duration if self.course_id else '')
+        months = _parse_months(duration_str)
+        self.course_fee = self.course.price * months
+
+        # IT/NYSC get 50% discount
         if self.student_type in ('it_student', 'nysc'):
             self.amount_to_pay = self.course_fee / 2
         else:

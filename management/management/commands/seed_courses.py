@@ -6,45 +6,44 @@ Usage:
 from django.core.management.base import BaseCommand
 from management.models import CourseCatalog
 
+# Exact courses from the Algaddaff Technology Hub Application Form
+# Price is PER MONTH — total fee = price × duration months
 COURSES = [
-    # (sn, name, duration, price)
-    (1,  "Computer Appreciation",              "2 months",  15000),
-    (2,  "Microsoft Office Suite",             "2 months",  20000),
-    (3,  "Desktop Publishing (DTP)",           "2 months",  20000),
-    (4,  "Web Design",                         "3 months",  30000),
-    (5,  "Graphic Design",                     "3 months",  30000),
-    (6,  "Video Editing",                      "3 months",  30000),
-    (7,  "Digital Marketing",                  "3 months",  30000),
-    (8,  "Mobile Phone Repairs",               "3 months",  35000),
-    (9,  "Laptop / Computer Repairs",          "3 months",  35000),
-    (10, "CCTV Installation",                  "2 months",  25000),
-    (11, "Solar Panel Installation",           "3 months",  40000),
-    (12, "Inverter / UPS Maintenance",         "2 months",  25000),
-    (13, "Electrical Wiring",                  "3 months",  35000),
-    (14, "Data Analysis (Excel / Power BI)",   "3 months",  35000),
-    (15, "Programming (Python)",               "4 months",  50000),
-    (16, "Programming (JavaScript)",           "4 months",  50000),
-    (17, "Cybersecurity Fundamentals",         "4 months",  50000),
-    (18, "Networking & IT Support",            "3 months",  40000),
-    (19, "Accounting Software (Sage / QuickBooks)", "2 months", 25000),
-    (20, "Fashion Design & Tailoring",         "6 months",  45000),
-    (21, "Catering & Food Processing",         "3 months",  30000),
-    (22, "Photography",                        "2 months",  25000),
-    (23, "Interior Decoration",                "3 months",  35000),
-    (24, "Autocad / Technical Drawing",        "3 months",  40000),
-    (25, "Project Management (PMP Prep)",      "3 months",  60000),
+    # (sn, name, duration, price_per_month)
+    (1,  "Certificate in Computer Appreciation",          "3 Months",  20000),
+    (2,  "Diploma in Computer Appreciation",              "6 Months",  15000),
+    (3,  "Certificate in Web Design and Development",     "4 Months",  40000),
+    (4,  "Diploma in Web Design and Development",         "6 Months",  30000),
+    (5,  "Certificate in Graphics and Animation",         "3 Months",  20000),
+    (6,  "Diploma in Graphics and Animation",             "6 Months",  30000),
+    (7,  "Certificate in Digital Marketing",              "3 Months",  20000),
+    (8,  "Diploma in Digital Marketing",                  "6 Months",  30000),
+    (9,  "Certificate in Software Programming",           "4 Months",  40000),
+    (10, "Diploma in Software Programming",               "6 Months",  30000),
+    (11, "Certificate in Hardware Maintenance",           "4 Months",  40000),
+    (12, "Diploma in Hardware Maintenance",               "6 Months",  30000),
+    (13, "Certificate in Networking Engineering",         "4 Months",  40000),
+    (14, "Diploma in Networking Engineering",             "6 Months",  30000),
+    (15, "Certificate in Cyber Security",                 "4 Months",  40000),
+    (16, "Diploma in Cyber Security",                     "6 Months",  30000),
+    (17, "Certificate in Data Science and Machine Learning", "4 Months", 40000),
+    (18, "Diploma in Data Science and Machine Learning",  "6 Months",  30000),
+    (19, "Certificate in Artificial Intelligence",        "2 Months",  25000),
+    (20, "Diploma in Artificial Intelligence",            "4 Months",  20000),
+    (21, "Certificate in Crypto Currency",                "2 Months",  25000),
+    (22, "Diploma in Crypto Currency",                    "4 Months",  20000),
+    (23, "Agribusiness Training",                         "3 Months",  50000),
+    (24, "Solar Installations Training",                  "3 Months",  50000),
+    (25, "CCTV Camera Training",                          "3 Months",  50000),
 ]
 
 
 class Command(BaseCommand):
-    help = "Seed the CourseCatalog with Algaddaff official courses and prices."
+    help = "Seed CourseCatalog with exact Algaddaff courses. Prices are per month."
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            '--clear',
-            action='store_true',
-            help='Delete all existing catalog entries before seeding.',
-        )
+        parser.add_argument('--clear', action='store_true',
+                            help='Delete all existing catalog entries before seeding.')
 
     def handle(self, *args, **options):
         if options['clear']:
@@ -68,9 +67,14 @@ class Command(BaseCommand):
                 created_count += 1
             else:
                 updated_count += 1
-
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Done. {created_count} course(s) created, {updated_count} updated."
+            self.stdout.write(
+                f"  {'✓ Created' if created else '↻ Updated'}: {sn}. {name} — {duration} — ₦{price:,}/month"
             )
-        )
+
+        self.stdout.write(self.style.SUCCESS(
+            f"\nDone. {created_count} created, {updated_count} updated."
+        ))
+        self.stdout.write(self.style.WARNING(
+            "NOTE: Courses 6–8 (Diploma in Graphics, Digital Marketing cert/diploma) "
+            "were not visible in the form photos — please verify and correct if needed."
+        ))
