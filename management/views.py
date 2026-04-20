@@ -120,12 +120,21 @@ class ManagementStatsView(APIView):
     def get(self, request):
         from django.db.models import Sum
 
-        total = StudentRecord.objects.count()
-        pending = StudentRecord.objects.filter(application_status='pending').count()
-        approved = StudentRecord.objects.filter(application_status='approved').count()
-        declined = StudentRecord.objects.filter(application_status='declined').count()
+        qs = StudentRecord.objects.all()
 
-        totals = StudentRecord.objects.aggregate(
+        month = request.query_params.get('month')
+        year = request.query_params.get('year')
+        if year:
+            qs = qs.filter(created_at__year=year)
+        if month:
+            qs = qs.filter(created_at__month=month)
+
+        total = qs.count()
+        pending = qs.filter(application_status='pending').count()
+        approved = qs.filter(application_status='approved').count()
+        declined = qs.filter(application_status='declined').count()
+
+        totals = qs.aggregate(
             total_expected=Sum('amount_to_pay'),
             total_collected=Sum('amount_paid'),
             total_balance=Sum('balance'),
@@ -143,4 +152,5 @@ class ManagementStatsView(APIView):
                 'total_collected': totals['total_collected'] or 0,
                 'total_balance': totals['total_balance'] or 0,
             },
+            'filter': {'month': month, 'year': year},
         })
