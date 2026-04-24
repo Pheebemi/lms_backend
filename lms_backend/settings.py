@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'blog',
     'contacts',
     'management',
+    'anymail',
 ]
 
 MIDDLEWARE = [
@@ -174,21 +175,16 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all origins in development
 
-# Email Configuration - Use DEBUG to control email backend
-EMAIL_HOST = config('EMAIL_HOST')
-EMAIL_PORT = config('EMAIL_PORT', cast=int)
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
-
+# Email Configuration
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@algaddaftechnologyhub.com')
 
 if DEBUG:
-    # Development - use console
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
-    # Production - send real emails
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
+    ANYMAIL = {
+        'RESEND_API_KEY': config('RESEND_API_KEY'),
+    }
 
 # Flutterwave Configuration
 FLUTTERWAVE_PUBLIC_KEY = config('FLUTTERWAVE_PUBLIC_KEY', default='')
