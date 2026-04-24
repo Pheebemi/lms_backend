@@ -53,45 +53,21 @@ class RegisterView(generics.CreateAPIView):
         # Send OTP via email
         try:
             send_mail(
-                subject='🔐 Email Verification - Algaddaf Technology Hub',
-                message=f'''
-🚀 Welcome to Algaddaf Technology Hub!
+                subject='Verify your email - Algaddaf Technology Hub',
+                message=f'''Hello {user.first_name},
 
-Hello {user.first_name},
+Thank you for registering with Algaddaf Technology Hub.
 
-Thank you for joining our Learning Management System! To complete your registration, please verify your email address using the OTP code below:
+Your verification code is:
 
-┌─────────────────────────────────┐
-│  🔐 Your Verification Code:     │
-│  {otp.otp_code}                 │
-└─────────────────────────────────┘
+{otp.otp_code}
 
-⏰ This code will expire at: {otp.expires_at}
+This code expires in 10 minutes.
 
-📝 Instructions:
-1. Copy the 6-digit code above
-2. Return to the verification page
-3. Enter the code to activate your account
+If you did not create an account, you can ignore this email.
 
-🔒 Security Note:
-- This code is valid for 10 minutes only
-- Never share this code with anyone
-- If you didn't request this, please ignore this email
-
-🎓 Once verified, you'll have access to:
-• Browse and enroll in courses
-• Take interactive lessons
-• Complete quizzes and assessments
-• Earn certificates upon completion
-• Track your learning progress
-
-Best regards,
-The Algaddaf Technology Hub Team
-
----
 Algaddaf Technology Hub
-Empowering Education Through Technology
-                ''',
+''',
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
                 fail_silently=False,
@@ -311,41 +287,21 @@ def resend_otp(request):
     # Send OTP via email
     try:
         send_mail(
-            subject='🔄 New Verification Code - Algaddaf Technology Hub',
-            message=f'''
-🔄 New Verification Code Request
+            subject='New verification code - Algaddaf Technology Hub',
+            message=f'''Hello {user.first_name},
 
-Hello {user.first_name},
+You requested a new verification code for your Algaddaf Technology Hub account.
 
-You've requested a new verification code for your Algaddaf Technology Hub account. Here's your fresh OTP:
+Your verification code is:
 
-┌─────────────────────────────────┐
-│  🔐 Your New Verification Code: │
-│  {otp.otp_code}                 │
-└─────────────────────────────────┘
+{otp.otp_code}
 
-⏰ This code will expire at: {otp.expires_at}
+This code expires in 10 minutes.
 
-📝 Quick Steps:
-1. Copy the 6-digit code above
-2. Return to the verification page
-3. Enter the new code to verify your account
+If you did not request this, you can ignore this email.
 
-🔒 Security Reminder:
-- This is a new code - the previous one is no longer valid
-- Never share this code with anyone
-- If you didn't request this, please contact support
-
-🎓 Ready to start learning?
-Once verified, you'll have full access to our courses and learning materials!
-
-Best regards,
-The Algaddaf Technology Hub Team
-
----
 Algaddaf Technology Hub
-Empowering Education Through Technology
-            ''',
+''',
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
             fail_silently=False,
