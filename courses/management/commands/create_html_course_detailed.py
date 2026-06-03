@@ -1,8 +1,49 @@
+import html as _html
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from courses.models import Category, Course, Lesson, Quiz, QuizQuestion
 
 User = get_user_model()
+
+
+def to_html_content(raw: str) -> str:
+    """
+    Convert the plain-text lesson content (which contains HTML code examples)
+    into safe HTML suitable for Quill/TipTap storage.
+
+    Each ─── SECTION ─── heading becomes an <h3>.
+    Everything else is grouped into <pre><code> blocks so that HTML tags
+    like <html>, <body>, <br> display as literal text rather than being
+    interpreted by the browser.
+    """
+    lines = raw.strip().splitlines()
+    parts: list[str] = []
+    buffer: list[str] = []
+
+    def flush_buffer():
+        if buffer:
+            escaped = _html.escape("\n".join(buffer))
+            parts.append(f'<pre><code>{escaped}</code></pre>')
+            buffer.clear()
+
+    # First line is always the lesson welcome heading
+    if lines and lines[0].startswith("Welcome to Lesson"):
+        parts.append(f'<h2>{_html.escape(lines[0])}</h2>')
+        lines = lines[1:]
+
+    for line in lines:
+        # Section divider lines like  ─── THE TITLE ──────
+        stripped = line.strip()
+        if stripped.startswith("───") or stripped.startswith("---"):
+            flush_buffer()
+            title = stripped.replace("─", "").replace("-", "").strip()
+            if title:
+                parts.append(f'<h3>{_html.escape(title)}</h3>')
+        else:
+            buffer.append(line)
+
+    flush_buffer()
+    return "\n".join(parts)
 
 LESSONS = [
     {
@@ -986,7 +1027,7 @@ class Command(BaseCommand):
                     "title": lesson_data["title"],
                     "description": lesson_data["description"],
                     "lesson_type": "text",
-                    "content": lesson_data["content"],
+                    "content": to_html_content(lesson_data["content"]),
                     "duration_minutes": lesson_data["duration_minutes"],
                     "is_published": True,
                 },
