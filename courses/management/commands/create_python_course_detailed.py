@@ -1241,7 +1241,7 @@ Good luck!
             {"q": "What is the LEGB rule?", "o": ["A style guide", "Memory allocation order", "A versioning scheme", "Variable lookup order: Local, Enclosing, Global, Built-in"], "a": "Variable lookup order: Local, Enclosing, Global, Built-in"},
             {"q": "What is a lambda function?", "o": ["A class method", "A recursive function", "A built-in function", "A small anonymous single-expression function"], "a": "A small anonymous single-expression function"},
             {"q": "What is a decorator?", "o": ["A comment style", "A type annotation", "A class attr", "A function that wraps another function to extend behaviour"], "a": "A function that wraps another function to extend behaviour"},
-            {"q": "Why avoid mutable default arguments?", "o": ["They cause a syntax error", "They slow the function", "They are not allowed", "The default is shared across all calls — mutations persist"], "a": "The default is shared across all calls — mutations persist"],
+            {"q": "Why avoid mutable default arguments?", "o": ["They cause a syntax error", "They slow the function", "They are not allowed", "The default is shared across all calls — mutations persist"], "a": "The default is shared across all calls — mutations persist"},
             {"q": "Can Python functions return multiple values?", "o": ["No", "Only with keyword", "Only tuples explicitly", "Yes, as a tuple"], "a": "Yes, as a tuple"},
             {"q": "What does 'nonlocal' do?", "o": ["Creates a global var", "Imports from outer module", "Declares a class variable", "Refers to a variable in the enclosing (outer) function's scope"], "a": "Refers to a variable in the enclosing (outer) function's scope"},
             # Data Structures (33–44)
