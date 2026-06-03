@@ -42,7 +42,7 @@ LESSONS = [
         "title": "Python Basics — Syntax, Variables & Data Types",
         "description": "Learn Python syntax, how to run Python, variables, built-in data types (int, float, str, bool, None), type conversion, and basic input/output.",
         "duration_minutes": 35,
-        "content": """Welcome to Lesson 1: Python Basics — Syntax, Variables & Data Types
+        "content": '''Welcome to Lesson 1: Python Basics — Syntax, Variables & Data Types
 
 Python is a high-level, interpreted, dynamically-typed language famous for its readable syntax.
 
@@ -133,7 +133,7 @@ Python is dynamically typed — no type declaration needed:
     and   or   not
     is    is not   (identity check)
     in    not in   (membership check)
-""",
+''',
         "quiz_title": "Quiz 1 — Python Basics, Variables & Data Types",
         "quiz_description": "20 questions on Python syntax, variables, data types, type conversion, f-strings, and operators.",
         "time_limit": 20,
@@ -165,7 +165,7 @@ Python is dynamically typed — no type declaration needed:
         "title": "Control Flow — Conditionals & Loops",
         "description": "Control program execution with if/elif/else, while loops, for loops, range(), break, continue, pass, and the else clause on loops.",
         "duration_minutes": 35,
-        "content": """Welcome to Lesson 2: Control Flow — Conditionals & Loops
+        "content": '''Welcome to Lesson 2: Control Flow — Conditionals & Loops
 
 Python uses indentation (not braces) to define code blocks.
 
@@ -249,7 +249,7 @@ Get index and value together:
     scores = [95, 87]
     for name, score in zip(names, scores):
         print(f"{name}: {score}")
-""",
+''',
         "quiz_title": "Quiz 2 — Control Flow, Conditionals & Loops",
         "quiz_description": "20 questions on if/elif/else, ternary, while, for, range, break, continue, pass, enumerate, and zip.",
         "time_limit": 20,
@@ -281,7 +281,7 @@ Get index and value together:
         "title": "Functions — Definitions, Arguments & Scope",
         "description": "Define functions with def, understand positional and keyword arguments, default parameters, *args/**kwargs, return values, variable scope (LEGB), lambda functions, and decorators.",
         "duration_minutes": 40,
-        "content": """Welcome to Lesson 3: Functions — Definitions, Arguments & Scope
+        "content": '''Welcome to Lesson 3: Functions — Definitions, Arguments & Scope
 
 Functions let you package reusable logic and avoid repetition.
 
@@ -396,7 +396,7 @@ A decorator wraps a function to add behaviour:
 
     help(greet)      # displays docstring
     greet.__doc__    # raw docstring string
-""",
+''',
         "quiz_title": "Quiz 3 — Functions, Arguments & Scope",
         "quiz_description": "20 questions on def, default params, *args/**kwargs, return, LEGB scope, lambda, and decorators.",
         "time_limit": 20,
@@ -428,7 +428,7 @@ A decorator wraps a function to add behaviour:
         "title": "Data Structures — Lists, Tuples, Sets & Dictionaries",
         "description": "Master Python's built-in data structures: lists (mutable sequences), tuples (immutable sequences), sets (unique collections), and dictionaries (key-value mappings).",
         "duration_minutes": 40,
-        "content": """Welcome to Lesson 4: Data Structures — Lists, Tuples, Sets & Dictionaries
+        "content": '''Welcome to Lesson 4: Data Structures — Lists, Tuples, Sets & Dictionaries
 
 Python's four main built-in collection types each serve different purposes.
 
@@ -513,7 +513,7 @@ Key-value pairs, ordered (Python 3.7+), mutable, keys must be unique & hashable:
     tuple — ordered, immutable, dict keys, function return values
     set   — unique values, fast membership tests, set operations
     dict  — key-value lookup, structured data, JSON-like
-""",
+''',
         "quiz_title": "Quiz 4 — Lists, Tuples, Sets & Dictionaries",
         "quiz_description": "20 questions on list methods, slicing, tuples, sets, dictionaries, and choosing the right data structure.",
         "time_limit": 20,
@@ -545,7 +545,7 @@ Key-value pairs, ordered (Python 3.7+), mutable, keys must be unique & hashable:
         "title": "Strings & String Methods",
         "description": "Work with Python strings: indexing, slicing, immutability, concatenation, f-strings, and essential methods like split, join, strip, replace, find, format, upper, lower, and more.",
         "duration_minutes": 35,
-        "content": """Welcome to Lesson 5: Strings & String Methods
+        "content": '''Welcome to Lesson 5: Strings & String Methods
 
 Strings in Python are immutable sequences of Unicode characters.
 
@@ -630,7 +630,7 @@ Alignment:
     len("hello")                   # 5
     ord('A')                       # 65 (Unicode code point)
     chr(65)                        # 'A'
-""",
+''',
         "quiz_title": "Quiz 5 — Strings & String Methods",
         "quiz_description": "20 questions on string indexing, slicing, immutability, f-strings, and key string methods.",
         "time_limit": 20,
@@ -662,7 +662,7 @@ Alignment:
         "title": "File I/O & Exception Handling",
         "description": "Read and write files using open(), context managers (with), file modes, work with JSON and CSV, and handle errors with try/except/else/finally and custom exceptions.",
         "duration_minutes": 40,
-        "content": """Welcome to Lesson 6: File I/O & Exception Handling
+        "content": '''Welcome to Lesson 6: File I/O & Exception Handling
 
 Python makes file operations and error handling clean and Pythonic.
 
@@ -770,7 +770,7 @@ Equivalent to try/finally for resource management.
     with open("file.txt") as f:
         data = f.read()
     # f.close() called automatically here
-""",
+''',
         "quiz_title": "Quiz 6 — File I/O & Exception Handling",
         "quiz_description": "20 questions on file modes, reading/writing, JSON, CSV, try/except, common exceptions, and context managers.",
         "time_limit": 20,
@@ -802,7 +802,7 @@ Equivalent to try/finally for resource management.
         "title": "Object-Oriented Programming — Classes & Objects",
         "description": "Understand OOP in Python: defining classes, __init__, instance and class attributes, methods, inheritance, super(), dunder methods, encapsulation, and polymorphism.",
         "duration_minutes": 45,
-        "content": """Welcome to Lesson 7: Object-Oriented Programming — Classes & Objects
+        "content": '''Welcome to Lesson 7: Object-Oriented Programming — Classes & Objects
 
 OOP organises code into objects that bundle data (attributes) and behaviour (methods).
 
@@ -902,7 +902,7 @@ OOP organises code into objects that bundle data (attributes) and behaviour (met
     isinstance(rex, Dog)        # True
     isinstance(rex, Animal)     # True (inheritance)
     issubclass(Dog, Animal)     # True
-""",
+''',
         "quiz_title": "Quiz 7 — OOP: Classes & Objects",
         "quiz_description": "20 questions on class definition, __init__, self, inheritance, super, dunder methods, properties, classmethods, and staticmethods.",
         "time_limit": 20,
@@ -934,7 +934,7 @@ OOP organises code into objects that bundle data (attributes) and behaviour (met
         "title": "Modules, Packages & the Standard Library",
         "description": "Import and create modules, understand packages with __init__.py, use the standard library (os, sys, math, random, datetime, pathlib, collections, itertools), and manage dependencies with pip.",
         "duration_minutes": 35,
-        "content": """Welcome to Lesson 8: Modules, Packages & the Standard Library
+        "content": '''Welcome to Lesson 8: Modules, Packages & the Standard Library
 
 Python's module system lets you organise code and reuse the vast standard library.
 
@@ -1020,7 +1020,7 @@ A package is a directory containing an __init__.py file:
     venv\\Scripts\\activate         # activate (Windows)
     source venv/bin/activate     # activate (Mac/Linux)
     deactivate                   # deactivate
-""",
+''',
         "quiz_title": "Quiz 8 — Modules, Packages & the Standard Library",
         "quiz_description": "20 questions on imports, creating modules, packages, standard library tools, collections, and pip.",
         "time_limit": 20,
@@ -1052,7 +1052,7 @@ A package is a directory containing an __init__.py file:
         "title": "List Comprehensions, Generators & Functional Tools",
         "description": "Write concise list, dict, and set comprehensions, create memory-efficient generators, use yield, and apply functional tools: map, filter, zip, enumerate, sorted, functools.reduce, and partial.",
         "duration_minutes": 40,
-        "content": """Welcome to Lesson 9: List Comprehensions, Generators & Functional Tools
+        "content": '''Welcome to Lesson 9: List Comprehensions, Generators & Functional Tools
 
 Python provides powerful tools for processing collections concisely and efficiently.
 
@@ -1154,7 +1154,7 @@ An iterator must implement:
         process(chunk)
 
     results = [y for x in data if (y := transform(x)) is not None]
-""",
+''',
         "quiz_title": "Quiz 9 — Comprehensions, Generators & Functional Tools",
         "quiz_description": "20 questions on list/dict/set comprehensions, generator functions, yield, map, filter, sorted, reduce, any, all, and walrus.",
         "time_limit": 20,
@@ -1186,7 +1186,7 @@ An iterator must implement:
         "title": "Final Review — Comprehensive Python Assessment",
         "description": "A 100-question comprehensive quiz covering all nine Python lessons from basics to advanced functional programming.",
         "duration_minutes": 100,
-        "content": """Welcome to Lesson 10: Final Review — Comprehensive Python Assessment
+        "content": '''Welcome to Lesson 10: Final Review — Comprehensive Python Assessment
 
 This is your final assessment covering everything from Lessons 1 through 9.
 
@@ -1204,7 +1204,7 @@ Topics covered:
 You have 100 questions and 100 minutes. 70% required to pass.
 
 Good luck!
-""",
+''',
         "quiz_title": "Final Quiz — Comprehensive Python (100 Questions)",
         "quiz_description": "100-question comprehensive assessment covering all Python topics from the entire course.",
         "time_limit": 100,
