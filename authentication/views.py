@@ -1,6 +1,7 @@
 from rest_framework import status, generics, permissions
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
+from .throttles import LoginRateThrottle, RegisterRateThrottle, OTPVerifyRateThrottle, OTPResendRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import login
 from django.utils import timezone
@@ -21,6 +22,7 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [RegisterRateThrottle]
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -94,6 +96,7 @@ Algaddaf Technology Hub
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
+@throttle_classes([LoginRateThrottle])
 def login_view(request):
     """
     User login endpoint
@@ -200,6 +203,7 @@ def role_based_users_view(request):
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
+@throttle_classes([OTPVerifyRateThrottle])
 def verify_email_otp(request):
     """
     Verify email OTP
@@ -260,6 +264,7 @@ def verify_email_otp(request):
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
+@throttle_classes([OTPResendRateThrottle])
 def resend_otp(request):
     """
     Resend OTP for email verification

@@ -131,6 +131,18 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '60/minute',
+        'user': '300/minute',
+        'login': '5/minute',
+        'register': '3/minute',
+        'otp_verify': '5/minute',
+        'otp_resend': '3/hour',
+    },
 }
 
 # JWT Settings
