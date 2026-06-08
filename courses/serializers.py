@@ -149,7 +149,16 @@ class LessonCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class QuizQuestionSerializer(serializers.ModelSerializer):
-    """Serializer for quiz questions"""
+    """Student-facing quiz question serializer — correct answers are never included"""
+    class Meta:
+        model = QuizQuestion
+        fields = [
+            'id', 'question_text', 'question_type', 'order', 'points', 'options'
+        ]
+
+
+class QuizQuestionManagementSerializer(serializers.ModelSerializer):
+    """Tutor/management serializer — includes correct answers for quiz authoring"""
     class Meta:
         model = QuizQuestion
         fields = [
@@ -161,7 +170,7 @@ class QuizQuestionSerializer(serializers.ModelSerializer):
 class QuizDetailSerializer(serializers.ModelSerializer):
     """Serializer for detailed quiz views"""
     questions = QuizQuestionSerializer(many=True, read_only=True)
-    
+
     class Meta:
         model = Quiz
         fields = [
@@ -172,7 +181,7 @@ class QuizDetailSerializer(serializers.ModelSerializer):
 
 class QuizCreateUpdateSerializer(serializers.ModelSerializer):
     """Serializer for creating and updating quizzes"""
-    questions = QuizQuestionSerializer(many=True, required=False)
+    questions = QuizQuestionManagementSerializer(many=True, required=False)
     
     class Meta:
         model = Quiz

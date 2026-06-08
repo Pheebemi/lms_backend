@@ -128,25 +128,37 @@ class CourseDeleteAPIView(generics.DestroyAPIView):
 
 # Lesson Views
 class LessonListAPIView(generics.ListAPIView):
-    """List lessons for a specific course"""
+    """List lessons for a specific course — requires enrollment"""
     serializer_class = LessonListSerializer
-    permission_classes = [permissions.AllowAny]
-    
+    permission_classes = [permissions.IsAuthenticated]
+
     def get_queryset(self):
         course_id = self.kwargs['course_id']
+        user = self.request.user
+        if not (user.is_tutor() or user.is_admin()):
+            if not Enrollment.objects.filter(student=user, course_id=course_id).exists():
+                raise PermissionDenied('You must be enrolled in this course to view lessons.')
         return Lesson.objects.filter(
-            course_id=course_id, 
+            course_id=course_id,
             is_published=True
         ).order_by('order')
 
 
 class LessonDetailAPIView(generics.RetrieveAPIView):
-    """Get detailed lesson information"""
+    """Get detailed lesson information — requires enrollment"""
     serializer_class = LessonDetailSerializer
-    permission_classes = [permissions.AllowAny]
-    
+    permission_classes = [permissions.IsAuthenticated]
+
     def get_queryset(self):
         return Lesson.objects.filter(is_published=True).select_related('course')
+
+    def get_object(self):
+        obj = super().get_object()
+        user = self.request.user
+        if not (user.is_tutor() or user.is_admin()):
+            if not Enrollment.objects.filter(student=user, course=obj.course).exists():
+                raise PermissionDenied('You must be enrolled in this course to view this lesson.')
+        return obj
 
 
 class LessonCreateAPIView(generics.CreateAPIView):
@@ -181,12 +193,20 @@ class LessonDeleteAPIView(generics.DestroyAPIView):
 
 # Quiz Views
 class QuizDetailAPIView(generics.RetrieveAPIView):
-    """Get quiz details for a lesson"""
+    """Get quiz details for a lesson — requires enrollment"""
     serializer_class = QuizDetailSerializer
-    permission_classes = [permissions.AllowAny]
-    
+    permission_classes = [permissions.IsAuthenticated]
+
     def get_queryset(self):
         return Quiz.objects.filter(is_published=True).prefetch_related('questions')
+
+    def get_object(self):
+        obj = super().get_object()
+        user = self.request.user
+        if not (user.is_tutor() or user.is_admin()):
+            if not Enrollment.objects.filter(student=user, course=obj.lesson.course).exists():
+                raise PermissionDenied('You must be enrolled in this course to view this quiz.')
+        return obj
 
 
 class QuizCreateAPIView(generics.CreateAPIView):

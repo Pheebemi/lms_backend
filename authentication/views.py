@@ -272,14 +272,17 @@ def resend_otp(request):
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
+        # Return the same success response to prevent email enumeration
         return Response({
-            'error': 'User not found'
-        }, status=status.HTTP_404_NOT_FOUND)
-    
+            'message': 'OTP sent successfully',
+            'email': email
+        }, status=status.HTTP_200_OK)
+
     if user.is_verified:
         return Response({
-            'error': 'Email is already verified'
-        }, status=status.HTTP_400_BAD_REQUEST)
+            'message': 'OTP sent successfully',
+            'email': email
+        }, status=status.HTTP_200_OK)
     
     # Generate new OTP
     otp = EmailVerificationOTP.generate_otp(user, email)
