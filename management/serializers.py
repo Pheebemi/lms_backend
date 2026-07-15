@@ -1,11 +1,30 @@
 from rest_framework import serializers
-from .models import CourseCatalog, StudentRecord
+from .models import CourseCatalog, StudentRecord, ManualCertificate
 
 
 class CourseCatalogSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseCatalog
         fields = ['id', 'sn', 'name', 'duration', 'price', 'is_active']
+
+
+class ManualCertificateSerializer(serializers.ModelSerializer):
+    course_name = serializers.CharField(source='course.name', read_only=True)
+    created_by_name = serializers.CharField(source='created_by.full_name', read_only=True)
+
+    class Meta:
+        model = ManualCertificate
+        fields = ['id', 'recipient_name', 'course', 'course_name', 'certificate_id', 'issued_at', 'created_by_name']
+        read_only_fields = ['id', 'certificate_id', 'issued_at', 'created_by_name']
+        # Drop the auto unique-together validator: the generate view intentionally
+        # reuses an existing (recipient, course) certificate so its ID stays stable.
+        validators = []
+
+    def validate_recipient_name(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("Recipient name is required.")
+        return value
 
 
 class StudentRecordSerializer(serializers.ModelSerializer):

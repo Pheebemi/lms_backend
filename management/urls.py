@@ -6,6 +6,8 @@ from .views import (
     StudentRecordListCreateView,
     StudentRecordDetailView,
     StudentRecordApproveView,
+    ManualCertificateListView,
+    GenerateManualCertificateView,
     ManagementStatsView,
 )
 
@@ -16,5 +18,7 @@ urlpatterns = [
     path('records/', StudentRecordListCreateView.as_view(), name='student-record-list-create'),
     path('records/<uuid:pk>/', StudentRecordDetailView.as_view(), name='student-record-detail'),
     path('records/<uuid:pk>/status/', StudentRecordApproveView.as_view(), name='student-record-status'),
+    path('certificates/', ManualCertificateListView.as_view(), name='manual-certificate-list'),
+    path('certificates/generate/', GenerateManualCertificateView.as_view(), name='manual-certificate-generate'),
     path('stats/', ManagementStatsView.as_view(), name='management-stats'),
 ]

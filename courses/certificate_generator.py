@@ -9,7 +9,7 @@ from datetime import datetime
 import os
 
 
-def generate_certificate_png(student_name, course_title, certificate_id, issued_date=None, completed_date=None):
+def generate_certificate_png(student_name, course_title, certificate_id, issued_date=None, completed_date=None, render_course_title=False):
     """
     Generate a PNG certificate using your custom design
 
@@ -18,6 +18,9 @@ def generate_certificate_png(student_name, course_title, certificate_id, issued_
         course_title: Title of the completed course
         certificate_id: Unique certificate ID
         issued_date: Date when certificate was issued (defaults to today)
+        render_course_title: When True, draw the course title onto the certificate
+            (used by manually-issued management certificates). Course-completion
+            certificates leave this off so their layout is unchanged.
 
     Returns:
         BytesIO object containing the PNG image
@@ -81,11 +84,12 @@ def generate_certificate_png(student_name, course_title, certificate_id, issued_
         draw.text((completion_date_x, completion_date_y), completion_text,
                   fill='#000000', font=certificate_id_font, anchor='mm')  # Same size as certificate ID
 
-    # Course Name - REMOVED for now, will add back later
-    # course_name_x = 1000   # Center horizontally
-    # course_name_y = 750    # ADJUST THIS: Increase to move down, decrease to move up
-    # draw.text((course_name_x, course_name_y), course_title,
-    #           fill='#000000', font=course_name_font, anchor='mm')  # Center anchor
+    # Course Name - only drawn for manually-issued certificates
+    if render_course_title and course_title:
+        course_name_x = 1280   # ADJUST THIS: center horizontally to match your template
+        course_name_y = 770    # ADJUST THIS: position between the name and the date
+        draw.text((course_name_x, course_name_y), course_title,
+                  fill='#000000', font=course_name_font, anchor='mm')  # Center anchor
 
     # Certificate ID - shortened and moved to top left
     certificate_id_x = 400  # CHANGE THIS: Increase to move RIGHT, decrease to move LEFT

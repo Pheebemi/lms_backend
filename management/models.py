@@ -110,3 +110,45 @@ class StudentRecord(models.Model):
             self.amount_to_pay = self.course_fee
         self.balance = self.amount_to_pay - self.amount_paid
         super().save(*args, **kwargs)
+
+
+class ManualCertificate(models.Model):
+    """
+    Certificate issued manually from the management dashboard.
+
+    Unlike course-completion certificates, the recipient is a free-typed name
+    (not a registered student) and there is no enrollment. The certificate_id is
+    generated once and reused for the same recipient + course, so regenerating
+    always yields the same ID.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    recipient_name = models.CharField(max_length=200)
+    course = models.ForeignKey(CourseCatalog, on_delete=models.PROTECT, related_name='manual_certificates')
+    certificate_id = models.CharField(max_length=50, unique=True)
+    issued_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='manual_certificates_created',
+    )
+
+    class Meta:
+        db_table = 'manual_certificates'
+        ordering = ['-issued_at']
+        # One stable certificate per recipient + course
+        unique_together = ['recipient_name', 'course']
+
+    def __str__(self):
+        return f"{self.certificate_id} — {self.recipient_name} ({self.course.name})"
+
+    @staticmethod
+    def generate_certificate_id():
+        """Generate a unique, hard-to-guess certificate ID."""
+        while True:
+            candidate = f"ATH-{uuid.uuid4().hex[:8].upper()}"
+            if not ManualCertificate.objects.filter(certificate_id=candidate).exists():
+                return candidate
+
+    def save(self, *args, **kwargs):
+        if not self.certificate_id:
+            self.certificate_id = self.generate_certificate_id()
+        super().save(*args, **kwargs)

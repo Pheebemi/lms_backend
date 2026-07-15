@@ -2,12 +2,14 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
 
-from .models import CourseCatalog, StudentRecord
+from .models import CourseCatalog, StudentRecord, ManualCertificate
 from .serializers import (
     CourseCatalogSerializer,
     StudentRecordSerializer,
     StudentRecordListSerializer,
+    ManualCertificateSerializer,
 )
 
 
@@ -111,6 +113,77 @@ class StudentRecordApproveView(APIView):
         record.application_status = new_status
         record.save(update_fields=['application_status', 'updated_at'])
         return Response({'id': str(record.id), 'application_status': record.application_status})
+
+
+class ManualCertificateListView(generics.ListAPIView):
+    """List previously generated manual certificates — management/admin only."""
+    serializer_class = ManualCertificateSerializer
+    permission_classes = [IsManagementOrAdmin]
+
+    def get_queryset(self):
+        qs = ManualCertificate.objects.select_related('course', 'created_by').all()
+        search = self.request.query_params.get('search')
+        if search:
+            from django.db.models import Q
+            qs = qs.filter(
+                Q(recipient_name__icontains=search) |
+                Q(certificate_id__icontains=search)
+            )
+        return qs
+
+
+class GenerateManualCertificateView(APIView):
+    """
+    Manually issue a certificate from the management dashboard.
+
+    Accepts a typed recipient name + a CourseCatalog course, generates (or reuses)
+    a stable certificate ID for that recipient + course, renders the certificate
+    PNG and returns it as a download. Regenerating for the same recipient + course
+    always reuses the same certificate ID.
+    """
+    permission_classes = [IsManagementOrAdmin]
+
+    def post(self, request):
+        serializer = ManualCertificateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        recipient_name = serializer.validated_data['recipient_name']
+        course = serializer.validated_data['course']
+
+        # Reuse an existing certificate for the same recipient + course so the ID
+        # is stable across regenerations (case-insensitive name match).
+        certificate = (
+            ManualCertificate.objects
+            .filter(recipient_name__iexact=recipient_name, course=course)
+            .first()
+        )
+        if certificate is None:
+            certificate = ManualCertificate.objects.create(
+                recipient_name=recipient_name,
+                course=course,
+                created_by=request.user,
+            )
+
+        # Render the certificate PNG (with the course title drawn on it)
+        from courses.certificate_generator import generate_certificate_png
+
+        img_buffer = generate_certificate_png(
+            student_name=certificate.recipient_name,
+            course_title=course.name,
+            certificate_id=certificate.certificate_id,
+            completed_date=certificate.issued_at,
+            render_course_title=True,
+        )
+
+        response = HttpResponse(img_buffer.read(), content_type='image/png')
+        safe_name = certificate.recipient_name.replace(' ', '_')
+        response['Content-Disposition'] = (
+            f'attachment; filename="certificate_{certificate.certificate_id}_{safe_name}.png"'
+        )
+        # Expose the ID to the browser fetch so the UI can display it
+        response['X-Certificate-Id'] = certificate.certificate_id
+        response['Access-Control-Expose-Headers'] = 'X-Certificate-Id, Content-Disposition'
+        return response
 
 
 class ManagementStatsView(APIView):

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CourseCatalog, StudentRecord
+from .models import CourseCatalog, StudentRecord, ManualCertificate
 
 
 @admin.register(CourseCatalog)
@@ -19,3 +19,12 @@ class StudentRecordAdmin(admin.ModelAdmin):
     search_fields = ['first_name', 'last_name', 'phone_no', 'id_no', 'email']
     readonly_fields = ['id', 'amount_to_pay', 'balance', 'created_by', 'created_at', 'updated_at']
     ordering = ['-created_at']
+
+
+@admin.register(ManualCertificate)
+class ManualCertificateAdmin(admin.ModelAdmin):
+    list_display = ['certificate_id', 'recipient_name', 'course', 'issued_at', 'created_by']
+    list_filter = ['course', 'issued_at']
+    search_fields = ['certificate_id', 'recipient_name']
+    readonly_fields = ['id', 'certificate_id', 'created_by', 'issued_at']
+    ordering = ['-issued_at']
