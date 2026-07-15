@@ -10,11 +10,15 @@ class CourseCatalogSerializer(serializers.ModelSerializer):
 
 class ManualCertificateSerializer(serializers.ModelSerializer):
     course_name = serializers.CharField(source='course.name', read_only=True)
+    grade_display = serializers.CharField(source='get_grade_display', read_only=True)
     created_by_name = serializers.CharField(source='created_by.full_name', read_only=True)
 
     class Meta:
         model = ManualCertificate
-        fields = ['id', 'recipient_name', 'course', 'course_name', 'certificate_id', 'issued_at', 'created_by_name']
+        fields = [
+            'id', 'recipient_name', 'course', 'course_name',
+            'grade', 'grade_display', 'certificate_id', 'issued_at', 'created_by_name',
+        ]
         read_only_fields = ['id', 'certificate_id', 'issued_at', 'created_by_name']
         # Drop the auto unique-together validator: the generate view intentionally
         # reuses an existing (recipient, course) certificate so its ID stays stable.

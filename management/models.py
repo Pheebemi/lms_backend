@@ -121,9 +121,17 @@ class ManualCertificate(models.Model):
     generated once and reused for the same recipient + course, so regenerating
     always yields the same ID.
     """
+    GRADE_CHOICES = [
+        ('pass', 'Pass'),
+        ('lower_credit', 'Lower Credit'),
+        ('upper_credit', 'Upper Credit'),
+        ('distinction', 'Distinction'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     recipient_name = models.CharField(max_length=200)
     course = models.ForeignKey(CourseCatalog, on_delete=models.PROTECT, related_name='manual_certificates')
+    grade = models.CharField(max_length=20, choices=GRADE_CHOICES, blank=True)
     certificate_id = models.CharField(max_length=50, unique=True)
     issued_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(

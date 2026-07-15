@@ -9,7 +9,16 @@ from datetime import datetime
 import os
 
 
-def generate_certificate_png(student_name, course_title, certificate_id, issued_date=None, completed_date=None, render_course_title=False):
+# Centre coordinates (x, y) of each grade checkbox on the template (2000×1414)
+GRADE_BOX_CENTERS = {
+    'pass': (547, 962),
+    'lower_credit': (990, 962),
+    'upper_credit': (1412, 962),
+    'distinction': (1875, 962),
+}
+
+
+def generate_certificate_png(student_name, course_title, certificate_id, issued_date=None, completed_date=None, render_course_title=False, grade=None):
     """
     Generate a PNG certificate using your custom design
 
@@ -18,9 +27,10 @@ def generate_certificate_png(student_name, course_title, certificate_id, issued_
         course_title: Title of the completed course
         certificate_id: Unique certificate ID
         issued_date: Date when certificate was issued (defaults to today)
-        render_course_title: When True, draw the course title onto the certificate
-            (used by manually-issued management certificates). Course-completion
-            certificates leave this off so their layout is unchanged.
+        render_course_title: Deprecated — the template already names the course,
+            so the course title is not drawn.
+        grade: One of 'pass', 'lower_credit', 'upper_credit', 'distinction'.
+            When set, an X is placed in the matching checkbox.
 
     Returns:
         BytesIO object containing the PNG image
@@ -51,13 +61,17 @@ def generate_certificate_png(student_name, course_title, certificate_id, issued_
     student_name_font = None
     course_name_font = None
     certificate_id_font = None
+    date_font = None
+    grade_font = None
 
     for font_path in font_paths:
         try:
             if os.path.exists(font_path):
-                student_name_font = ImageFont.truetype(font_path, 80)  # Adjust size for student name
-                course_name_font = ImageFont.truetype(font_path, 60)   # Adjust size for course name
-                certificate_id_font = ImageFont.truetype(font_path, 40) # Adjust size for certificate ID
+                student_name_font = ImageFont.truetype(font_path, 85)   # Recipient name
+                course_name_font = ImageFont.truetype(font_path, 68)     # Course name
+                certificate_id_font = ImageFont.truetype(font_path, 38)  # Certificate ID
+                date_font = ImageFont.truetype(font_path, 40)            # Graduation date
+                grade_font = ImageFont.truetype(font_path, 60)           # Grade checkbox mark
                 break
         except:
             continue
@@ -68,38 +82,35 @@ def generate_certificate_png(student_name, course_title, certificate_id, issued_
         student_name_font = default_font
         course_name_font = default_font
         certificate_id_font = default_font
+        date_font = default_font
+        grade_font = default_font
 
-    # Add text overlays on your template (CUSTOMIZE THESE COORDINATES FOR YOUR DESIGN)
-    # Student Name - adjust x, y coordinates to match your template's name field
-    student_name_x = 1000  # Center horizontally (half of 2000px width)
-    student_name_y = 620   # ADJUST THIS: Increase to move down, decrease to move up
-    draw.text((student_name_x, student_name_y), student_name.upper(),  # Convert to uppercase
+    # ── Text overlays (coordinates match certificate_template.png, 2000×1414) ──
+
+    # Certificate ID — placed just after the printed "CERT ID:" label
+    draw.text((430, 438), certificate_id,
+              fill='#000000', font=certificate_id_font, anchor='lm')  # Left-middle anchor
+
+    # Recipient name — centred on the line under "This certificate is presented to:"
+    draw.text((1000, 655), student_name.upper(),
               fill='#000000', font=student_name_font, anchor='mm')  # Center anchor
 
-    # Completion Date - below the student name
-    if completed_date:
-        completion_date_x = 1280  # Center horizontally
-        completion_date_y = 920 # CHANGE THIS: Position below student name (increase to move down, decrease to move up)
-        completion_text = completed_date.strftime('%B %d, %Y')  # Just the date, no "Completed on"
-        draw.text((completion_date_x, completion_date_y), completion_text,
-                  fill='#000000', font=certificate_id_font, anchor='mm')  # Same size as certificate ID
-
-    # Course Name - only drawn for manually-issued certificates
-    if render_course_title and course_title:
-        course_name_x = 1280   # ADJUST THIS: center horizontally to match your template
-        course_name_y = 770    # ADJUST THIS: position between the name and the date
-        draw.text((course_name_x, course_name_y), course_title,
+    # Course name — centred on the second line ("...has been awarded a ___")
+    if course_title:
+        draw.text((1000, 805), course_title,
                   fill='#000000', font=course_name_font, anchor='mm')  # Center anchor
 
-    # Certificate ID - shortened and moved to top left
-    certificate_id_x = 400  # CHANGE THIS: Increase to move RIGHT, decrease to move LEFT
-    certificate_id_y = 420 # CHANGE THIS: Increase to move DOWN, decrease to move UP
-    draw.text((certificate_id_x, certificate_id_y), certificate_id,  # Just the ID, no "Certificate ID:" text
-              fill='#666666', font=certificate_id_font, anchor='lt')  # Left-top anchor
+    # Grade — X in the matching checkbox (Pass / Lower Credit / Upper Credit / Distinction)
+    if grade and grade in GRADE_BOX_CENTERS:
+        draw.text(GRADE_BOX_CENTERS[grade], 'X',
+                  fill='#000000', font=grade_font, anchor='mm')
 
-    # Remove all the decorative drawing code since you're using a custom template
-    # Keep only the text overlays above and the image saving code below
-    
+    # Graduation date — on the line above the "Graduation Date" label
+    if completed_date:
+        completion_text = completed_date.strftime('%d %B, %Y').upper()
+        draw.text((810, 1165), completion_text,
+                  fill='#000000', font=date_font, anchor='mm')
+
     # Save to BytesIO
     img_buffer = BytesIO()
     img.save(img_buffer, format='PNG', quality=95, dpi=(300, 300))

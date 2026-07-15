@@ -149,6 +149,7 @@ class GenerateManualCertificateView(APIView):
 
         recipient_name = serializer.validated_data['recipient_name']
         course = serializer.validated_data['course']
+        grade = serializer.validated_data.get('grade', '')
 
         # Reuse an existing certificate for the same recipient + course so the ID
         # is stable across regenerations (case-insensitive name match).
@@ -161,10 +162,15 @@ class GenerateManualCertificateView(APIView):
             certificate = ManualCertificate.objects.create(
                 recipient_name=recipient_name,
                 course=course,
+                grade=grade,
                 created_by=request.user,
             )
+        elif certificate.grade != grade:
+            # Keep the same ID but allow the grade to be corrected
+            certificate.grade = grade
+            certificate.save(update_fields=['grade'])
 
-        # Render the certificate PNG (with the course title drawn on it)
+        # Render the certificate PNG
         from courses.certificate_generator import generate_certificate_png
 
         img_buffer = generate_certificate_png(
@@ -172,7 +178,7 @@ class GenerateManualCertificateView(APIView):
             course_title=course.name,
             certificate_id=certificate.certificate_id,
             completed_date=certificate.issued_at,
-            render_course_title=True,
+            grade=certificate.grade,
         )
 
         response = HttpResponse(img_buffer.read(), content_type='image/png')

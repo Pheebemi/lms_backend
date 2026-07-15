@@ -23,8 +23,8 @@ class StudentRecordAdmin(admin.ModelAdmin):
 
 @admin.register(ManualCertificate)
 class ManualCertificateAdmin(admin.ModelAdmin):
-    list_display = ['certificate_id', 'recipient_name', 'course', 'issued_at', 'created_by']
-    list_filter = ['course', 'issued_at']
+    list_display = ['certificate_id', 'recipient_name', 'course', 'grade', 'issued_at', 'created_by']
+    list_filter = ['course', 'grade', 'issued_at']
     search_fields = ['certificate_id', 'recipient_name']
     readonly_fields = ['id', 'certificate_id', 'created_by', 'issued_at']
     ordering = ['-issued_at']
