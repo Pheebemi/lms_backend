@@ -14,7 +14,7 @@ GRADE_BOX_CENTERS = {
     'pass': (547, 962),
     'lower_credit': (990, 962),
     'upper_credit': (1412, 962),
-    'distinction': (1875, 962),
+    'distinction': (1828, 962),
 }
 
 
