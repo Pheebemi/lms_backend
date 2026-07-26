@@ -5,9 +5,9 @@ from .throttles import LoginRateThrottle, RegisterRateThrottle, OTPVerifyRateThr
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import login
 from django.utils import timezone
-from django.core.mail import send_mail
 from django.conf import settings
 from .models import User, StudentProfile, TutorProfile, AdminProfile, EmailVerificationOTP
+from .utils import send_otp_email
 from .serializers import (
     UserRegistrationSerializer, UserLoginSerializer, UserSerializer,
     UserProfileSerializer, ChangePasswordSerializer, OTPVerificationSerializer,
@@ -53,38 +53,7 @@ class RegisterView(generics.CreateAPIView):
         otp = EmailVerificationOTP.generate_otp(user, user.email)
         
         # Send OTP via email
-        try:
-            send_mail(
-                subject='Verify your email - Algaddaf Technology Hub',
-                message=f'''Hello {user.first_name},
-
-Thank you for registering with Algaddaf Technology Hub.
-
-Your verification code is:
-
-{otp.otp_code}
-
-This code expires in 10 minutes.
-
-If you did not create an account, you can ignore this email.
-
-Algaddaf Technology Hub
-''',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=False,
-            )
-            print(f"✅ OTP sent to {user.email}")
-        except Exception as e:
-            print(f"❌ Failed to send email to {user.email}: {e}")
-            # Fallback to console for debugging
-            print(f"\n{'='*50}")
-            print(f"EMAIL VERIFICATION OTP (FALLBACK)")
-            print(f"{'='*50}")
-            print(f"Email: {user.email}")
-            print(f"OTP Code: {otp.otp_code}")
-            print(f"Expires at: {otp.expires_at}")
-            print(f"{'='*50}\n")
+        send_otp_email(user.email, otp.otp_code, first_name=user.first_name)
         
         return Response({
             'message': 'User registered successfully. Please verify your email.',
@@ -293,38 +262,7 @@ def resend_otp(request):
     otp = EmailVerificationOTP.generate_otp(user, email)
     
     # Send OTP via email
-    try:
-        send_mail(
-            subject='New verification code - Algaddaf Technology Hub',
-            message=f'''Hello {user.first_name},
-
-You requested a new verification code for your Algaddaf Technology Hub account.
-
-Your verification code is:
-
-{otp.otp_code}
-
-This code expires in 10 minutes.
-
-If you did not request this, you can ignore this email.
-
-Algaddaf Technology Hub
-''',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
-            fail_silently=False,
-        )
-        print(f"✅ Resend OTP sent to {email}")
-    except Exception as e:
-        print(f"❌ Failed to resend email to {email}: {e}")
-        # Fallback to console for debugging
-        print(f"\n{'='*50}")
-        print(f"RESEND EMAIL VERIFICATION OTP (FALLBACK)")
-        print(f"{'='*50}")
-        print(f"Email: {email}")
-        print(f"OTP Code: {otp.otp_code}")
-        print(f"Expires at: {otp.expires_at}")
-        print(f"{'='*50}\n")
+    send_otp_email(email, otp.otp_code, first_name=user.first_name, is_resend=True)
     
     return Response({
         'message': 'OTP sent successfully',
