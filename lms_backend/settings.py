@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'blog',
     'contacts',
     'management',
+    'support',
 ]
 
 MIDDLEWARE = [
@@ -76,13 +77,31 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'lms_backend.wsgi.application'
 
-# Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database — selected by env with no code change.
+# If MYSQL_DATABASE is set → MySQL (utf8mb4, strict mode); otherwise → SQLite.
+# Keep local .env on SQLite (leave MYSQL_* unset) and set MYSQL_* only on the server.
+if config('MYSQL_DATABASE', default=''):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': config('MYSQL_DATABASE'),
+            'USER': config('MYSQL_USER', default=''),
+            'PASSWORD': config('MYSQL_PASSWORD', default=''),
+            'HOST': config('MYSQL_HOST', default='localhost'),
+            'PORT': config('MYSQL_PORT', default='3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -142,6 +161,8 @@ REST_FRAMEWORK = {
         'register': '3/minute',
         'otp_verify': '5/minute',
         'otp_resend': '3/hour',
+        'support_chat': '15/minute',
+        'support_contact': '5/hour',
     },
 }
 
@@ -203,6 +224,20 @@ FLUTTERWAVE_ENCRYPTION_KEY = config('FLUTTERWAVE_ENCRYPTION_KEY', default='')
 
 # Frontend URL for payment redirects
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+
+# ── Support AI chat ──────────────────────────────────────────────────────────
+# OpenAI-chat-compatible provider (Groq by default). Key stays server-side;
+# if empty the chat endpoint returns 503 and the widget offers the contact form.
+SUPPORT_AI_API_KEY = config('SUPPORT_AI_API_KEY', default='')
+SUPPORT_AI_API_URL = config('SUPPORT_AI_API_URL',
+                            default='https://api.groq.com/openai/v1/chat/completions')
+SUPPORT_AI_MODEL = config('SUPPORT_AI_MODEL', default='llama-3.3-70b-versatile')
+
+# ── Admin handoff alerts ─────────────────────────────────────────────────────
+# Comma-separated recipient list; if empty, active superusers are alerted.
+ADMIN_ALERT_EMAILS = [e.strip() for e in config('ADMIN_ALERT_EMAILS', default='').split(',') if e.strip()]
+# Used to build the admin change-URL inside alert emails.
+BASE_URL = config('BASE_URL', default='http://localhost:8000')
 
 # WhiteNoise Configuration
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
