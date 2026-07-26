@@ -71,12 +71,14 @@ Driver: MySQL needs `mysqlclient` in the server virtualenv
 
 2. **Export from SQLite FIRST**, before `MYSQL_*` is set:
    ```bash
-   python manage.py dumpdata --natural-foreign --natural-primary \
+   python3.10 manage.py dumpdata --natural-foreign --natural-primary \
      --exclude contenttypes --exclude auth.permission \
-     --exclude admin.logentry --exclude sessions.session \
-     --exclude token_blacklist > data.json
+     --exclude admin.logentry --exclude sessions.session > data.json
    ```
-   ⚠️ No `print()` in `settings.py` — it corrupts `data.json` (must start with `[`).
+   (No `token_blacklist` exclude — this project doesn't install that app.)
+   ⚠️ No `print()` in `settings.py` — it would corrupt `data.json` (must start
+   with `[`). This project has none, but if `data.json` ever starts with junk:
+   `python3.10 -c "d=open('data.json').read(); open('data.json','w').write(d[d.find('['):])"`
 
 3. **Set the `MYSQL_*` env vars** on the server `.env`:
    ```
@@ -88,8 +90,14 @@ Driver: MySQL needs `mysqlclient` in the server virtualenv
    ```
    Keep the **local** `.env` without these (stays on SQLite).
 
-4. `python manage.py migrate` → builds the tables as utf8mb4.
-5. `python manage.py loaddata data.json` → `Installed N objects`.
+4. `python3.10 manage.py migrate` → builds the tables (utf8mb4 if step 1 done).
+5. `python3.10 manage.py loaddata data.json` → `Installed N objects`.
+   - If you hit **`Incorrect string value`** (emoji in some text field on a
+     non-utf8mb4 table), run the fixer and retry loaddata:
+     ```bash
+     python3.10 manage.py mysql_utf8mb4          # convert DB + all tables
+     python3.10 manage.py mysql_utf8mb4 --check   # verify everything is utf8mb4
+     ```
 6. Reload the web app; verify login + data.
 7. Keep the old `db.sqlite3` as a snapshot. **Never delete the `MYSQL_*` lines**
    from the server `.env` — it would silently fall back to the empty SQLite.
