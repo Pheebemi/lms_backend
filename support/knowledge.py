@@ -91,10 +91,25 @@ CERTIFICATES
   name, the course, and a unique certificate ID.
 
 COMMUNITY & CONTACT
-- ALGADDAF has an active WhatsApp community learners can join from the website
-  for tips, announcements and support.
-- People can reach the team through the contact section on the website, or by
-  using the "Talk to a human" button in this chat.
+- Full name: Algaddaf Technology Hub Ltd (also called A-T Hub).
+- Head office: Inside the Technology Incubation Center (TIC), No. 49 Barde Way,
+  Jalingo, Taraba State. Landmark: beside TV Taraba, on Barde Way. Walk-in
+  registration and other services are available at the office.
+- Training centres (all in Jalingo, Taraba State) — a student can attend the one
+  nearest them:
+  1. TIC (head office): No. 49 Barde Way, beside TV Taraba.
+  2. Muslim Council Headquarters: beside the Governor's Wife's Office.
+  3. Darul Ulum: beside the Old Primary Board, Anguwan Mal Gabdo.
+  4. Jalingo Local Government: inside the Jalingo Local Government Secretariat.
+- Phone / enquiries: 08039376179, 07063523802, 08166533325, 07074294193.
+- Email: algaddaftechnologyhub@gmail.com
+- Website: https://algaddaftechnologyhub.com
+- Social media: YouTube (@AlgaddafTechHub), Facebook, Instagram, X (Twitter),
+  TikTok and LinkedIn — all linked from the website footer.
+- ALGADDAF also has an active WhatsApp community learners can join from the
+  website for tips, announcements and support.
+- People can reach the team through any of the above, the contact section on
+  the website, or by using the "Talk to a human" button in this chat.
 
 USEFUL LINKS (safe to share when someone asks where to go)
 Main website: https://algaddaftechnologyhub.com
