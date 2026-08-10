@@ -78,7 +78,8 @@ class StudentRecordSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         ]
-        read_only_fields = ['id', 'amount_to_pay', 'balance', 'created_by', 'created_at', 'updated_at']
+        # course_fee, amount_to_pay and balance are all derived in Model.save()
+        read_only_fields = ['id', 'course_fee', 'amount_to_pay', 'balance', 'created_by', 'created_at', 'updated_at']
 
     def validate_passport_photo(self, value):
         if value and value.size > 100 * 1024:  # 100 KB
