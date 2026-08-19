@@ -235,9 +235,12 @@ SUPPORT_AI_MODEL = config('SUPPORT_AI_MODEL', default='llama-3.3-70b-versatile')
 # Reply ceiling. Raise it if answers stop mid-sentence. On a model that reasons
 # before answering, thinking tokens are drawn from this same budget, so a low
 # value there can leave little or nothing for the visible reply.
-SUPPORT_AI_MAX_TOKENS = config('SUPPORT_AI_MAX_TOKENS', default=1024, cast=int)
+SUPPORT_AI_MAX_TOKENS = config('SUPPORT_AI_MAX_TOKENS', default=2048, cast=int)
 # Seconds to wait on the provider before falling back to the friendly error.
-SUPPORT_AI_TIMEOUT = config('SUPPORT_AI_TIMEOUT', default=30, cast=int)
+# This is a safety net, not a fix for a slow model: a support widget that takes
+# this long has already lost the person waiting on it. If replies routinely need
+# the extra time, the model is the thing to change, not this number.
+SUPPORT_AI_TIMEOUT = config('SUPPORT_AI_TIMEOUT', default=60, cast=int)
 
 # ── Admin handoff alerts ─────────────────────────────────────────────────────
 # Comma-separated recipient list; if empty, active superusers are alerted.
