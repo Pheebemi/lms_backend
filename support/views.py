@@ -55,16 +55,35 @@ def support_chat(request):
                 'model': settings.SUPPORT_AI_MODEL,
                 'messages': messages,
                 'temperature': 0.2,
-                'max_tokens': 400,
+                'max_tokens': settings.SUPPORT_AI_MAX_TOKENS,
             },
-            timeout=30,
+            timeout=settings.SUPPORT_AI_TIMEOUT,
         )
         resp.raise_for_status()
         data = resp.json()
-        reply = data['choices'][0]['message']['content'].strip()
+        choice = data['choices'][0]
+        reply = choice['message']['content'].strip()
+
+        # A reply cut off by the token ceiling is otherwise invisible — it just
+        # reads as the assistant trailing off. Log it so the cause is findable.
+        if choice.get('finish_reason') == 'length':
+            logger.warning(
+                'Support chat reply hit the %s-token ceiling (SUPPORT_AI_MAX_TOKENS); '
+                'the reply was cut off mid-sentence.',
+                settings.SUPPORT_AI_MAX_TOKENS,
+            )
     except Exception:
         # Provider errors can leak billing/account detail — log, never surface.
         logger.exception('Support chat provider call failed')
+        return Response({'reply': FRIENDLY_ERROR}, status=status.HTTP_200_OK)
+
+    # An empty reply renders as a blank bubble. It happens when the whole token
+    # budget went to reasoning and none was left for the answer.
+    if not reply:
+        logger.warning(
+            'Support chat provider returned an empty reply (model=%s, max_tokens=%s).',
+            settings.SUPPORT_AI_MODEL, settings.SUPPORT_AI_MAX_TOKENS,
+        )
         return Response({'reply': FRIENDLY_ERROR}, status=status.HTTP_200_OK)
 
     return Response({'reply': reply}, status=status.HTTP_200_OK)
