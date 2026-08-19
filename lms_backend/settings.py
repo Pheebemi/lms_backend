@@ -232,6 +232,12 @@ SUPPORT_AI_API_KEY = config('SUPPORT_AI_API_KEY', default='')
 SUPPORT_AI_API_URL = config('SUPPORT_AI_API_URL',
                             default='https://api.groq.com/openai/v1/chat/completions')
 SUPPORT_AI_MODEL = config('SUPPORT_AI_MODEL', default='llama-3.3-70b-versatile')
+# Reply ceiling. Raise it if answers stop mid-sentence. On a model that reasons
+# before answering, thinking tokens are drawn from this same budget, so a low
+# value there can leave little or nothing for the visible reply.
+SUPPORT_AI_MAX_TOKENS = config('SUPPORT_AI_MAX_TOKENS', default=1024, cast=int)
+# Seconds to wait on the provider before falling back to the friendly error.
+SUPPORT_AI_TIMEOUT = config('SUPPORT_AI_TIMEOUT', default=30, cast=int)
 
 # ── Admin handoff alerts ─────────────────────────────────────────────────────
 # Comma-separated recipient list; if empty, active superusers are alerted.
