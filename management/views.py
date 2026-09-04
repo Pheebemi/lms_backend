@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,7 +13,11 @@ from .serializers import (
     StudentRecordListSerializer,
     ManualCertificateSerializer,
     SiwesLetterSerializer,
+    EmailSiwesLetterSerializer,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 class IsManagementOrAdmin(permissions.BasePermission):
@@ -302,3 +308,66 @@ class GenerateSiwesLetterView(APIView):
         response['X-Letter-Id'] = letter.reference_id
         response['Access-Control-Expose-Headers'] = 'X-Letter-Id, Content-Disposition'
         return response
+
+
+class EmailSiwesLetterView(APIView):
+    """
+    Email an already-generated SIWES letter as a PDF attachment.
+
+    Re-renders the PDF from the stored letter (nothing is kept on disk between
+    generate and email) rather than requiring the caller to re-upload it.
+    Subject and message are optional and default to a standard cover note;
+    when supplied they let the management user speak directly to the
+    recipient institution rather than send a form letter.
+    """
+    permission_classes = [IsManagementOrAdmin]
+
+    def post(self, request):
+        serializer = EmailSiwesLetterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        letter = get_object_or_404(SiwesLetter, pk=data['letter_id'])
+
+        from .siwes_letter import generate_siwes_letter_pdf
+        from .emails import send_siwes_letter_email, default_subject, default_message
+
+        buf = generate_siwes_letter_pdf(
+            student_name=letter.student_name,
+            course_of_study=letter.course_of_study,
+            registration_no=letter.registration_no,
+            institution=letter.institution,
+            institution_state=letter.institution_state,
+            duration_months=letter.duration_months,
+            start_month=letter.start_month,
+            start_year=letter.start_year,
+            letter_date=letter.letter_date,
+        )
+
+        subject = data.get('subject', '').strip() or default_subject(letter)
+        message = data.get('message', '').strip() or default_message(letter)
+        safe_name = ''.join(ch if ch.isalnum() else '_' for ch in letter.student_name).strip('_')
+        filename = f'siwes_{letter.reference_id}_{safe_name}.pdf'
+
+        try:
+            send_siwes_letter_email(
+                letter=letter,
+                recipient_email=data['email'],
+                subject=subject,
+                message=message,
+                pdf_bytes=buf.read(),
+                filename=filename,
+            )
+        except Exception:
+            logger.exception('Failed to email SIWES letter %s to %s', letter.reference_id, data['email'])
+            return Response(
+                {'detail': 'Could not send the email. Please check the address and try again.'},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        from django.utils import timezone
+        letter.emailed_to = data['email']
+        letter.emailed_at = timezone.now()
+        letter.save(update_fields=['emailed_to', 'emailed_at'])
+
+        return Response({'success': True, 'emailed_to': data['email']}, status=status.HTTP_200_OK)

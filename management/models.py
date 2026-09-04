@@ -203,6 +203,12 @@ class SiwesLetter(models.Model):
         related_name='siwes_letters_created',
     )
 
+    # Set when the letter is emailed from the history list. Blank until then;
+    # overwritten (not appended) on each send, so this reflects the most
+    # recent recipient rather than a full send log.
+    emailed_to = models.EmailField(blank=True)
+    emailed_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         db_table = 'siwes_letters'
         ordering = ['-issued_at']
