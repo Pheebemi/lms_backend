@@ -128,6 +128,7 @@ class SiwesLetterSerializer(serializers.ModelSerializer):
             'start_month', 'start_month_display', 'start_year',
             'end_month', 'end_year', 'letter_date',
             'reference_id', 'issued_at', 'created_by_name',
+            'emailed_to', 'emailed_at',
         ]
         read_only_fields = ['id', 'reference_id', 'issued_at', 'created_by_name']
 
@@ -156,3 +157,11 @@ class SiwesLetterSerializer(serializers.ModelSerializer):
                 if not attrs[field]:
                     raise serializers.ValidationError({field: "This field is required."})
         return attrs
+
+
+class EmailSiwesLetterSerializer(serializers.Serializer):
+    """Validates a request to email an already-generated letter."""
+    letter_id = serializers.UUIDField()
+    email = serializers.EmailField()
+    subject = serializers.CharField(required=False, allow_blank=True, max_length=200)
+    message = serializers.CharField(required=False, allow_blank=True, max_length=5000)

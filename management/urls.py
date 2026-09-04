@@ -11,6 +11,7 @@ from .views import (
     ManagementStatsView,
     SiwesLetterListView,
     GenerateSiwesLetterView,
+    EmailSiwesLetterView,
 )
 
 urlpatterns = [
@@ -24,5 +25,6 @@ urlpatterns = [
     path('certificates/generate/', GenerateManualCertificateView.as_view(), name='manual-certificate-generate'),
     path('siwes-letters/', SiwesLetterListView.as_view(), name='siwes-letter-list'),
     path('siwes-letters/generate/', GenerateSiwesLetterView.as_view(), name='siwes-letter-generate'),
+    path('siwes-letters/email/', EmailSiwesLetterView.as_view(), name='siwes-letter-email'),
     path('stats/', ManagementStatsView.as_view(), name='management-stats'),
 ]

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIWES Acceptance Letter</title>
+</head>
+<body style="margin:0; padding:24px; background:#f4f4f5; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; color:#1b1b1f;">
+    <div style="max-width:480px; margin:0 auto; background:#ffffff; border:1px solid #e4e4e7; border-radius:12px; overflow:hidden;">
+
+        <!-- Header -->
+        <div style="background:#2563eb; padding:24px 32px;">
+            <p style="margin:0; font-size:18px; font-weight:700; color:#ffffff; letter-spacing:0.3px;">
+                ALGADDAF Technology Hub
+            </p>
+        </div>
+
+        <!-- Body -->
+        <div style="padding:32px;">
+            {% for paragraph in message_paragraphs %}
+            <p style="margin:0 0 16px; font-size:15px; line-height:1.6; color:#3f3f46;">{{ paragraph|linebreaksbr }}</p>
+            {% endfor %}
+
+            <div style="background:#f4f4f5; border:1px solid #e4e4e7; border-radius:10px; padding:16px 20px; margin:8px 0 4px;">
+                <p style="margin:0 0 4px; font-size:12px; text-transform:uppercase; letter-spacing:1px; color:#71717a;">
+                    Attached
+                </p>
+                <p style="margin:0; font-size:14px; font-weight:600; color:#1b1b1f;">
+                    SIWES Acceptance Letter — {{ student_name }}
+                </p>
+                <p style="margin:4px 0 0; font-size:12px; color:#71717a; font-family:'Courier New',Courier,monospace;">
+                    Ref: {{ reference_id }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="padding:20px 32px; border-top:1px solid #e4e4e7;">
+            <p style="margin:0; font-size:12px; color:#a1a1aa;">
+                ALGADDAF Technology Hub · Jalingo, Nigeria
+            </p>
+        </div>
+    </div>
+</body>
+</html>
