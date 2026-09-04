@@ -160,3 +160,78 @@ class ManualCertificate(models.Model):
         if not self.certificate_id:
             self.certificate_id = self.generate_certificate_id()
         super().save(*args, **kwargs)
+
+
+class SiwesLetter(models.Model):
+    """
+    SIWES acceptance letter issued from the management dashboard.
+
+    Confirms to a university that one of its students has been accepted for
+    industrial attachment here. Every field below is a value that changes per
+    letter; the letterhead, body wording, signatory and stamp are fixed in the
+    template and are not stored.
+
+    The student's institution, matric number and placement dates are not held
+    anywhere else in the system (StudentRecord has no such fields), so they are
+    typed fresh for each letter rather than looked up.
+    """
+    MONTHS = [
+        (1, 'January'), (2, 'February'), (3, 'March'), (4, 'April'),
+        (5, 'May'), (6, 'June'), (7, 'July'), (8, 'August'),
+        (9, 'September'), (10, 'October'), (11, 'November'), (12, 'December'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    student_name = models.CharField(max_length=200)
+    # The university's course, e.g. "Computer Science Education" — free text,
+    # deliberately not a CourseCatalog FK, which lists what is taught here.
+    course_of_study = models.CharField(max_length=200)
+    registration_no = models.CharField(max_length=50)
+    institution = models.CharField(max_length=200)
+    institution_state = models.CharField(max_length=100)
+
+    duration_months = models.PositiveSmallIntegerField(default=3)
+    start_month = models.PositiveSmallIntegerField(choices=MONTHS)
+    start_year = models.PositiveSmallIntegerField()
+    letter_date = models.DateField()
+
+    reference_id = models.CharField(max_length=50, unique=True)
+    issued_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='siwes_letters_created',
+    )
+
+    class Meta:
+        db_table = 'siwes_letters'
+        ordering = ['-issued_at']
+        # Deliberately no unique_together: a student may legitimately need a
+        # second letter for a corrected detail or a different placement period.
+
+    def __str__(self):
+        return f"{self.reference_id} — {self.student_name} ({self.institution})"
+
+    @property
+    def end_month_year(self):
+        """
+        (month, year) the attachment ends — derived, never stored, so it cannot
+        drift out of step with the start date and duration.
+
+        Inclusive of the start month: 3 months from October is October to December.
+        """
+        zero_based = (self.start_month - 1) + (self.duration_months - 1)
+        return (zero_based % 12) + 1, self.start_year + zero_based // 12
+
+    @staticmethod
+    def generate_reference_id():
+        """Generate a unique, hard-to-guess letter reference."""
+        while True:
+            candidate = f"ATH-SIWES-{uuid.uuid4().hex[:8].upper()}"
+            if not SiwesLetter.objects.filter(reference_id=candidate).exists():
+                return candidate
+
+    def save(self, *args, **kwargs):
+        if not self.reference_id:
+            self.reference_id = self.generate_reference_id()
+        super().save(*args, **kwargs)

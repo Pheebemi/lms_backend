@@ -4,12 +4,13 @@ from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 
-from .models import CourseCatalog, StudentRecord, ManualCertificate
+from .models import CourseCatalog, StudentRecord, ManualCertificate, SiwesLetter
 from .serializers import (
     CourseCatalogSerializer,
     StudentRecordSerializer,
     StudentRecordListSerializer,
     ManualCertificateSerializer,
+    SiwesLetterSerializer,
 )
 
 
@@ -233,3 +234,71 @@ class ManagementStatsView(APIView):
             },
             'filter': {'month': month, 'year': year},
         })
+
+
+# ── SIWES acceptance letters ────────────────────────────────────────────────
+
+class SiwesLetterListView(generics.ListAPIView):
+    """List previously issued SIWES acceptance letters — management/admin only."""
+    serializer_class = SiwesLetterSerializer
+    permission_classes = [IsManagementOrAdmin]
+
+    def get_queryset(self):
+        qs = SiwesLetter.objects.select_related('created_by').all()
+        search = self.request.query_params.get('search')
+        if search:
+            from django.db.models import Q
+            qs = qs.filter(
+                Q(student_name__icontains=search) |
+                Q(registration_no__icontains=search) |
+                Q(institution__icontains=search) |
+                Q(reference_id__icontains=search)
+            )
+        return qs
+
+
+class GenerateSiwesLetterView(APIView):
+    """
+    Render a SIWES acceptance letter as a PDF and stream it back.
+
+    Saves the letter first so there is a record of what was issued, then returns
+    the file bytes directly. The reference is echoed in a header so the browser
+    can show it without a second request.
+
+    Passing `letter_id` re-renders an existing letter, keeping its reference —
+    that is what the Regenerate action in the history list sends.
+    """
+    permission_classes = [IsManagementOrAdmin]
+
+    def post(self, request):
+        letter_id = request.data.get('letter_id')
+        if letter_id:
+            letter = get_object_or_404(SiwesLetter, pk=letter_id)
+        else:
+            serializer = SiwesLetterSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            letter = serializer.save(created_by=request.user)
+
+        from .siwes_letter import generate_siwes_letter_pdf
+        buf = generate_siwes_letter_pdf(
+            student_name=letter.student_name,
+            course_of_study=letter.course_of_study,
+            registration_no=letter.registration_no,
+            institution=letter.institution,
+            institution_state=letter.institution_state,
+            duration_months=letter.duration_months,
+            start_month=letter.start_month,
+            start_year=letter.start_year,
+            letter_date=letter.letter_date,
+        )
+
+        response = HttpResponse(buf.read(), content_type='application/pdf')
+        safe_name = ''.join(
+            ch if ch.isalnum() else '_' for ch in letter.student_name
+        ).strip('_')
+        response['Content-Disposition'] = (
+            f'attachment; filename="siwes_{letter.reference_id}_{safe_name}.pdf"'
+        )
+        response['X-Letter-Id'] = letter.reference_id
+        response['Access-Control-Expose-Headers'] = 'X-Letter-Id, Content-Disposition'
+        return response

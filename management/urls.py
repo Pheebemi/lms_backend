@@ -9,6 +9,8 @@ from .views import (
     ManualCertificateListView,
     GenerateManualCertificateView,
     ManagementStatsView,
+    SiwesLetterListView,
+    GenerateSiwesLetterView,
 )
 
 urlpatterns = [
@@ -20,5 +22,7 @@ urlpatterns = [
     path('records/<uuid:pk>/status/', StudentRecordApproveView.as_view(), name='student-record-status'),
     path('certificates/', ManualCertificateListView.as_view(), name='manual-certificate-list'),
     path('certificates/generate/', GenerateManualCertificateView.as_view(), name='manual-certificate-generate'),
+    path('siwes-letters/', SiwesLetterListView.as_view(), name='siwes-letter-list'),
+    path('siwes-letters/generate/', GenerateSiwesLetterView.as_view(), name='siwes-letter-generate'),
     path('stats/', ManagementStatsView.as_view(), name='management-stats'),
 ]

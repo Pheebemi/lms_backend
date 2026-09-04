@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CourseCatalog, StudentRecord, ManualCertificate
+from .models import CourseCatalog, StudentRecord, ManualCertificate, SiwesLetter
 
 
 class CourseCatalogSerializer(serializers.ModelSerializer):
@@ -112,3 +112,47 @@ class StudentRecordListSerializer(serializers.ModelSerializer):
             'created_by_name',
             'created_at',
         ]
+
+
+class SiwesLetterSerializer(serializers.ModelSerializer):
+    created_by_name = serializers.CharField(source='created_by.full_name', read_only=True)
+    start_month_display = serializers.CharField(source='get_start_month_display', read_only=True)
+    end_month = serializers.SerializerMethodField()
+    end_year = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SiwesLetter
+        fields = [
+            'id', 'student_name', 'course_of_study', 'registration_no',
+            'institution', 'institution_state', 'duration_months',
+            'start_month', 'start_month_display', 'start_year',
+            'end_month', 'end_year', 'letter_date',
+            'reference_id', 'issued_at', 'created_by_name',
+        ]
+        read_only_fields = ['id', 'reference_id', 'issued_at', 'created_by_name']
+
+    def get_end_month(self, obj):
+        return obj.end_month_year[0]
+
+    def get_end_year(self, obj):
+        return obj.end_month_year[1]
+
+    def validate_duration_months(self, value):
+        if not 1 <= value <= 12:
+            raise serializers.ValidationError("Duration must be between 1 and 12 months.")
+        return value
+
+    def validate_start_year(self, value):
+        if not 2000 <= value <= 2100:
+            raise serializers.ValidationError("Enter a valid year.")
+        return value
+
+    def validate(self, attrs):
+        # Trim the free-text fields; a trailing space reaches the printed letter.
+        for field in ('student_name', 'course_of_study', 'registration_no',
+                      'institution', 'institution_state'):
+            if field in attrs:
+                attrs[field] = attrs[field].strip()
+                if not attrs[field]:
+                    raise serializers.ValidationError({field: "This field is required."})
+        return attrs
