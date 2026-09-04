@@ -214,7 +214,13 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='lemuelemmanuel29@gmail.com')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='rpdceoywlbcxddoy')
+# No default here on purpose. An earlier Gmail app password was hardcoded as
+# the fallback and, being in a public repo, was found and revoked by Google —
+# every email (OTP verification, admin alerts, SIWES letters) then failed
+# with the same dead credential until the cause was tracked down. Leaving
+# this unset makes a missing env var fail immediately and obviously, instead
+# of silently authenticating with a revoked, publicly-known password.
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='lemuelemmanuel29@gmail.com')
 
 # Flutterwave Configuration
