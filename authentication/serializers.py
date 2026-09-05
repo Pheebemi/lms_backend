@@ -150,3 +150,29 @@ class ResendOTPSerializer(serializers.Serializer):
     Serializer for resending OTP
     """
     email = serializers.EmailField()
+
+class ForgotPasswordRequestSerializer(serializers.Serializer):
+    """
+    Serializer for requesting a password reset code
+    """
+    email = serializers.EmailField()
+
+
+class ResetPasswordConfirmSerializer(serializers.Serializer):
+    """
+    Serializer for confirming a password reset with the emailed code
+    """
+    email = serializers.EmailField()
+    otp_code = serializers.CharField(max_length=6, min_length=6)
+    new_password = serializers.CharField(validators=[validate_password])
+    new_password_confirm = serializers.CharField()
+
+    def validate_otp_code(self, value):
+        if not value.isdigit():
+            raise serializers.ValidationError('Code must contain only digits')
+        return value
+
+    def validate(self, attrs):
+        if attrs['new_password'] != attrs['new_password_confirm']:
+            raise serializers.ValidationError({'new_password_confirm': "Passwords don't match"})
+        return attrs

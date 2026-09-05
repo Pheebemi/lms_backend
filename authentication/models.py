@@ -195,3 +195,57 @@ class EmailVerificationOTP(models.Model):
         Check if OTP has expired
         """
         return timezone.now() >= self.expires_at
+
+class PasswordResetOTP(models.Model):
+    """
+    One-time code for resetting a forgotten password.
+
+    Kept separate from EmailVerificationOTP: that model's verify() marks the
+    account's email as verified as a side effect, which has no meaning here,
+    and a reset needs the new password supplied in the same step as the
+    code — a code that only proves "you got the email" should never be
+    spendable on its own, only together with setting a new password.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_otps')
+    email = models.EmailField()
+    otp_code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    attempts = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = 'password_reset_otps'
+        verbose_name = 'Password Reset OTP'
+        verbose_name_plural = 'Password Reset OTPs'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Password reset OTP for {self.email}"
+
+    def save(self, *args, **kwargs):
+        if not self.pk:  # Only set expiry on creation
+            self.expires_at = timezone.now() + timedelta(minutes=10)
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def generate_otp(cls, user, email):
+        """
+        Generate a new password reset code, invalidating any unused ones so
+        only the most recently requested code can succeed.
+        """
+        cls.objects.filter(user=user, email=email, is_used=False).update(is_used=True)
+
+        otp_code = ''.join(random.choices(string.digits, k=6))
+
+        return cls.objects.create(
+            user=user,
+            email=email,
+            otp_code=otp_code
+        )
+
+    def is_expired(self):
+        """
+        Check if the code has expired
+        """
+        return timezone.now() >= self.expires_at

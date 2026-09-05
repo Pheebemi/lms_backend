@@ -1,17 +1,20 @@
 from rest_framework import status, generics, permissions
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
-from .throttles import LoginRateThrottle, RegisterRateThrottle, OTPVerifyRateThrottle, OTPResendRateThrottle
+from .throttles import (
+    LoginRateThrottle, RegisterRateThrottle, OTPVerifyRateThrottle, OTPResendRateThrottle,
+    ForgotPasswordRateThrottle, ResetPasswordRateThrottle,
+)
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import login
 from django.utils import timezone
 from django.conf import settings
-from .models import User, StudentProfile, TutorProfile, AdminProfile, EmailVerificationOTP
-from .utils import send_otp_email
+from .models import User, StudentProfile, TutorProfile, AdminProfile, EmailVerificationOTP, PasswordResetOTP
+from .utils import send_otp_email, send_password_reset_email
 from .serializers import (
     UserRegistrationSerializer, UserLoginSerializer, UserSerializer,
     UserProfileSerializer, ChangePasswordSerializer, OTPVerificationSerializer,
-    ResendOTPSerializer
+    ResendOTPSerializer, ForgotPasswordRequestSerializer, ResetPasswordConfirmSerializer,
 )
 
 
@@ -267,4 +270,86 @@ def resend_otp(request):
     return Response({
         'message': 'OTP sent successfully',
         'email': email
+    }, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+@throttle_classes([ForgotPasswordRateThrottle])
+def forgot_password_request(request):
+    """
+    Request a password reset code.
+
+    Always responds with the same generic message whether or not the
+    account exists, and regardless of whether the email actually sent —
+    a different response for either case would let the caller discover
+    which email addresses have accounts.
+    """
+    serializer = ForgotPasswordRequestSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    email = serializer.validated_data['email']
+
+    try:
+        user = User.objects.get(email=email)
+        otp = PasswordResetOTP.generate_otp(user, email)
+        send_password_reset_email(email, otp.otp_code, first_name=user.first_name)
+    except User.DoesNotExist:
+        pass
+
+    return Response({
+        'message': 'If an account exists for this email, a reset code has been sent.',
+        'email': email,
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+@throttle_classes([ResetPasswordRateThrottle])
+def forgot_password_confirm(request):
+    """
+    Verify the reset code and set the new password in the same step, so a
+    code proves nothing on its own — it can only ever be spent together
+    with an actual password change, never just "checked" and reused.
+    """
+    serializer = ResetPasswordConfirmSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.validated_data
+
+    # One generic error for "no such user", "no code", and "expired code" —
+    # anything else would tell an attacker which emails have accounts.
+    generic_error = {'error': 'Invalid or expired code. Please request a new one.'}
+
+    try:
+        user = User.objects.get(email=data['email'])
+    except User.DoesNotExist:
+        return Response(generic_error, status=status.HTTP_400_BAD_REQUEST)
+
+    otp = PasswordResetOTP.objects.filter(
+        user=user,
+        email=data['email'],
+        is_used=False
+    ).order_by('-created_at').first()
+
+    if not otp or otp.is_expired():
+        return Response(generic_error, status=status.HTTP_400_BAD_REQUEST)
+
+    if otp.attempts >= 3:
+        return Response({
+            'error': 'Too many incorrect attempts. Please request a new code.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    if otp.otp_code != data['otp_code']:
+        otp.attempts += 1
+        otp.save(update_fields=['attempts'])
+        return Response(generic_error, status=status.HTTP_400_BAD_REQUEST)
+
+    otp.is_used = True
+    otp.save(update_fields=['is_used'])
+    # Any other outstanding codes for this user are now stale.
+    PasswordResetOTP.objects.filter(user=user, is_used=False).exclude(pk=otp.pk).update(is_used=True)
+
+    user.set_password(data['new_password'])
+    user.save()
+
+    return Response({
+        'message': 'Password reset successfully. Please sign in with your new password.'
     }, status=status.HTTP_200_OK)

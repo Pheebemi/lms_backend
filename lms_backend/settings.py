@@ -161,6 +161,8 @@ REST_FRAMEWORK = {
         'register': '3/minute',
         'otp_verify': '5/minute',
         'otp_resend': '3/hour',
+        'forgot_password': '3/hour',
+        'reset_password': '5/minute',
         'support_chat': '15/minute',
         'support_contact': '5/hour',
     },

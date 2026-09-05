@@ -15,3 +15,11 @@ class OTPVerifyRateThrottle(AnonRateThrottle):
 
 class OTPResendRateThrottle(AnonRateThrottle):
     scope = 'otp_resend'
+
+
+class ForgotPasswordRateThrottle(AnonRateThrottle):
+    scope = 'forgot_password'
+
+
+class ResetPasswordRateThrottle(AnonRateThrottle):
+    scope = 'reset_password'
