@@ -12,7 +12,11 @@ urlpatterns = [
     # Email verification endpoints
     path('verify-email/', views.verify_email_otp, name='verify_email_otp'),
     path('resend-otp/', views.resend_otp, name='resend_otp'),
-    
+
+    # Password reset endpoints
+    path('forgot-password/', views.forgot_password_request, name='forgot_password_request'),
+    path('reset-password/', views.forgot_password_confirm, name='forgot_password_confirm'),
+
     # User profile endpoints
     path('profile/', views.UserProfileView.as_view(), name='user_profile'),
     path('user-info/', views.user_info_view, name='user_info'),
