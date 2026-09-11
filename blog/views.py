@@ -9,9 +9,9 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 from .models import Category, Tag, Post, Comment, PostView
 from .serializers import (
-    CategorySerializer, TagSerializer, PostListSerializer, 
+    CategorySerializer, TagSerializer, PostListSerializer,
     PostDetailSerializer, PostCreateUpdateSerializer,
-    CommentSerializer, CommentCreateSerializer, BlogStatsSerializer
+    CommentSerializer, CommentCreateSerializer, AdminCommentSerializer, BlogStatsSerializer
 )
 
 
@@ -19,6 +19,17 @@ class BlogPagination(PageNumberPagination):
     page_size = 12
     page_size_query_param = 'page_size'
     max_page_size = 50
+
+
+class IsManagementOrAdmin(permissions.BasePermission):
+    """Allow access only to management or admin users — mirrors the same
+    permission in management/views.py so the blog can be run from the
+    management dashboard without requiring Django's separate is_staff flag."""
+    def has_permission(self, request, view):
+        return (
+            request.user.is_authenticated
+            and request.user.role in ('management', 'admin')
+        )
 
 
 # Public Views (No Authentication Required)
@@ -170,71 +181,116 @@ def add_comment(request, post_slug):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# Admin Views (Authentication Required)
+# Admin Views (management dashboard — management/admin role required)
 class AdminPostListCreateView(generics.ListCreateAPIView):
-    """Admin view to list and create blog posts"""
-    serializer_class = PostCreateUpdateSerializer
-    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    """Admin view to list and create blog posts.
+
+    GET uses PostListSerializer (adds id + nested category/tags, needed to
+    render a table and build edit/delete links) — PostCreateUpdateSerializer
+    doesn't expose id at all, so list+PostCreateUpdateSerializer would give
+    the dashboard no way to address any row it just listed.
+    """
+    permission_classes = [IsManagementOrAdmin]
     pagination_class = BlogPagination
-    
+
     def get_queryset(self):
-        return Post.objects.select_related('author', 'category').prefetch_related('tags').order_by('-created_at')
-    
+        qs = Post.objects.select_related('author', 'category').prefetch_related('tags').order_by('-created_at')
+        status_param = self.request.query_params.get('status')
+        if status_param:
+            qs = qs.filter(status=status_param)
+        return qs
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return PostCreateUpdateSerializer
+        return PostListSerializer
+
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
 
 class AdminPostDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """Admin view to get, update, or delete a blog post"""
-    serializer_class = PostDetailSerializer
-    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
-    
+    """Admin view to get, update, or delete a blog post.
+
+    GET returns the fully nested representation (category/tags as objects);
+    PUT/PATCH use the flat create/update serializer instead — PostDetailSerializer
+    declares its category/tags as read-only nested serializers, so using it for
+    writes would silently drop any category or tag change sent by the editor.
+    """
+    permission_classes = [IsManagementOrAdmin]
+
     def get_queryset(self):
         return Post.objects.select_related('author', 'category').prefetch_related('tags')
+
+    def get_serializer_class(self):
+        if self.request.method in ('PUT', 'PATCH'):
+            return PostCreateUpdateSerializer
+        return PostDetailSerializer
 
 
 class AdminCategoryListCreateView(generics.ListCreateAPIView):
     """Admin view to list and create categories"""
     serializer_class = CategorySerializer
-    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
-    
+    permission_classes = [IsManagementOrAdmin]
+
     def get_queryset(self):
         return Category.objects.all().order_by('name')
+
+
+class AdminCategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Admin view to update or delete a category"""
+    serializer_class = CategorySerializer
+    permission_classes = [IsManagementOrAdmin]
+    queryset = Category.objects.all()
 
 
 class AdminTagListCreateView(generics.ListCreateAPIView):
     """Admin view to list and create tags"""
     serializer_class = TagSerializer
-    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
-    
+    permission_classes = [IsManagementOrAdmin]
+
     def get_queryset(self):
         return Tag.objects.all().order_by('name')
 
 
+class AdminTagDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Admin view to update or delete a tag"""
+    serializer_class = TagSerializer
+    permission_classes = [IsManagementOrAdmin]
+    queryset = Tag.objects.all()
+
+
 class AdminCommentListView(generics.ListAPIView):
-    """Admin view to list all comments"""
-    serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
+    """Admin view to list all comments, across all posts, for moderation"""
+    serializer_class = AdminCommentSerializer
+    permission_classes = [IsManagementOrAdmin]
     pagination_class = BlogPagination
-    
+
     def get_queryset(self):
         return Comment.objects.select_related('post').order_by('-created_at')
 
 
+class AdminCommentDetailView(generics.RetrieveDestroyAPIView):
+    """Admin view to view or delete a single comment (e.g. spam removal)"""
+    serializer_class = AdminCommentSerializer
+    permission_classes = [IsManagementOrAdmin]
+    queryset = Comment.objects.select_related('post')
+
+
 @api_view(['PATCH'])
-@permission_classes([permissions.IsAuthenticated, permissions.IsAdminUser])
+@permission_classes([IsManagementOrAdmin])
 def approve_comment(request, comment_id):
     """Approve or disapprove a comment"""
     comment = get_object_or_404(Comment, id=comment_id)
     comment.is_approved = not comment.is_approved
     comment.save()
-    
-    serializer = CommentSerializer(comment)
+
+    serializer = AdminCommentSerializer(comment)
     return Response(serializer.data)
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated, permissions.IsAdminUser])
+@permission_classes([IsManagementOrAdmin])
 def admin_blog_stats(request):
     """Get detailed blog statistics for admin dashboard"""
     from django.db.models import Sum

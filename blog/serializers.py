@@ -96,10 +96,11 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = [
-            'title', 'slug', 'category', 'tags', 'excerpt', 'content',
+            'id', 'title', 'slug', 'category', 'tags', 'excerpt', 'content',
             'featured_image', 'meta_description', 'status'
         ]
-    
+        read_only_fields = ['id']
+
     def create(self, validated_data):
         # Set the author to the current user
         validated_data['author'] = self.context['request'].user
@@ -110,6 +111,22 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ['id', 'name', 'email', 'content', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+
+class AdminCommentSerializer(serializers.ModelSerializer):
+    """Comment list for the management dashboard — adds moderation fields
+    (is_approved, which post it's on) that the public-facing serializer omits."""
+    post_id = serializers.IntegerField(source='post.id', read_only=True)
+    post_title = serializers.CharField(source='post.title', read_only=True)
+    post_slug = serializers.CharField(source='post.slug', read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = [
+            'id', 'name', 'email', 'content', 'is_approved',
+            'post_id', 'post_title', 'post_slug', 'created_at',
+        ]
         read_only_fields = ['id', 'created_at']
 
 
