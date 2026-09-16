@@ -211,10 +211,32 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False  # Never reflect arbitrary origins, even in development
 
 # Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+#
+# Two mailboxes on one SMTP host: noreply@ for automated system mail (OTP
+# codes, password resets), info@ for human-facing mail (contact-form alerts,
+# SIWES letters). Most SMTP hosts — including the one algaddaftechnologyhub.com's
+# mailboxes run on — require the authenticated mailbox and the From address
+# to match, or the send is rejected/rewritten. So this is one login per
+# mailbox, not one login with a different From string per message.
+#
+# noreply@ is Django's default connection — EMAIL_HOST_USER below, used
+# automatically by any send with no explicit `connection=` (see
+# authentication/utils.py). info@ is a second connection built explicitly by
+# lms_backend/email_utils.py:send_from_info(), authenticated as
+# CONTACT_EMAIL_HOST_USER — used by support/utils.py and management/emails.py.
+#
+# Host/port/TLS are shared by both mailboxes (it's one mail server); only the
+# login and From address differ per mailbox. Defaults below preserve today's
+# Gmail behaviour unchanged — override via env when moving to the
+# algaddaftechnologyhub.com mailboxes (EMAIL_HOST=mail.algaddaftechnologyhub.com,
+# EMAIL_PORT=465, EMAIL_USE_TLS=False, EMAIL_USE_SSL=True).
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+
+# noreply@ — OTP verification codes, password resets.
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='lemuelemmanuel29@gmail.com')
 # No default here on purpose. An earlier Gmail app password was hardcoded as
 # the fallback and, being in a public repo, was found and revoked by Google —
@@ -224,6 +246,14 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='lemuelemmanuel29@gmail.com'
 # of silently authenticating with a revoked, publicly-known password.
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='lemuelemmanuel29@gmail.com')
+
+# info@ — contact-form/support alerts and staff-signed notices (SIWES
+# letters). Left unset (empty CONTACT_EMAIL_HOST_USER) until the mailbox is
+# provisioned and its env vars are set — send_from_info() falls back to the
+# noreply@ connection in that case, so nothing breaks in the meantime.
+CONTACT_EMAIL = config('CONTACT_EMAIL', default=DEFAULT_FROM_EMAIL)
+CONTACT_EMAIL_HOST_USER = config('CONTACT_EMAIL_HOST_USER', default='')
+CONTACT_EMAIL_HOST_PASSWORD = config('CONTACT_EMAIL_HOST_PASSWORD', default='')
 
 # Flutterwave Configuration
 FLUTTERWAVE_PUBLIC_KEY = config('FLUTTERWAVE_PUBLIC_KEY', default='')

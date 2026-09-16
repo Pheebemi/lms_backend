@@ -2,10 +2,11 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+
+from lms_backend.email_utils import send_from_info
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -82,15 +83,16 @@ def send_contact_admin_alert_email(contact):
 
     try:
         html_body = render_to_string('support/email/contact_admin_alert.html', context)
-        msg = EmailMultiAlternatives(
+        # Sent as info@ (human-facing), reply-to the visitor so an admin can
+        # hit reply and it goes straight to them, not back to info@.
+        return send_from_info(
             subject=subject,
-            body=text_body,
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            text_body=text_body,
+            html_body=html_body,
             to=recipients,
+            reply_to=contact.email or None,
+            fail_silently=False,
         )
-        msg.attach_alternative(html_body, 'text/html')
-        msg.send(fail_silently=False)
-        return True
     except Exception:
         logger.exception('Failed to send contact admin alert for contact %s', contact.pk)
         return False
