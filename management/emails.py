@@ -1,18 +1,18 @@
 """
 Emailing a generated SIWES letter to its recipient.
 
-Follows the same shape as authentication/utils.py:send_otp_email — a branded
-HTML email with a plain-text fallback, sent via DEFAULT_FROM_EMAIL. Unlike
-that function this one does not swallow the exception: the OTP email is a
-background nicety the user never sees fail, but here a management user is
-directly asking "send this to the university" and needs to know if it did not
-go out, rather than seeing a false success.
+Sent as info@ — a staff-signed notice to a university, not automated system
+mail — via lms_backend/email_utils.py:send_from_info(). Unlike the OTP email
+this one does not swallow the exception: the OTP email is a background
+nicety the user never sees fail, but here a management user is directly
+asking "send this to the university" and needs to know if it did not go
+out, rather than seeing a false success.
 """
 import logging
 
-from django.conf import settings
-from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+
+from lms_backend.email_utils import send_from_info
 
 logger = logging.getLogger(__name__)
 
@@ -54,12 +54,11 @@ def send_siwes_letter_email(*, letter, recipient_email, subject, message, pdf_by
         'reference_id': letter.reference_id,
     })
 
-    msg = EmailMultiAlternatives(
+    send_from_info(
         subject=subject,
-        body=message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[recipient_email],
+        text_body=message,
+        html_body=html_body,
+        to=recipient_email,
+        attachments=[(filename, pdf_bytes, 'application/pdf')],
+        fail_silently=False,
     )
-    msg.attach_alternative(html_body, 'text/html')
-    msg.attach(filename, pdf_bytes, 'application/pdf')
-    msg.send(fail_silently=False)

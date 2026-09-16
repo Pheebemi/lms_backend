@@ -41,8 +41,39 @@ is saved even if the email fails.
 ```
 ADMIN_ALERT_EMAILS=you@example.com,ops@example.com   # optional; else superusers
 BASE_URL=https://pheedev.pythonanywhere.com          # builds the admin link
-# Email uses the existing EMAIL_HOST_USER / EMAIL_HOST_PASSWORD / DEFAULT_FROM_EMAIL
+# Sent as info@ (see "Two mailboxes" below) — falls back to the noreply@
+# connection automatically if CONTACT_EMAIL_HOST_USER isn't set yet.
 ```
+
+### Two mailboxes: noreply@ vs info@
+
+Automated system mail (OTP codes, password resets) sends as **noreply@**,
+via Django's default connection (`EMAIL_HOST_USER` / `DEFAULT_FROM_EMAIL`).
+Human-facing mail (this contact-alert, SIWES letters) sends as **info@**,
+via a second connection built by `lms_backend/email_utils.py:send_from_info()`.
+
+Most SMTP hosts — including the one algaddaftechnologyhub.com's mailboxes run
+on — require the authenticated mailbox and the `From` address to match, or
+the send is rejected/rewritten. So this is two logins, not one login with a
+different `From` string per message.
+
+**Env (`.env`), once the info@ mailbox exists in cPanel:**
+```
+EMAIL_HOST=mail.algaddaftechnologyhub.com   # same host for both mailboxes
+EMAIL_PORT=465
+EMAIL_USE_TLS=False
+EMAIL_USE_SSL=True
+
+EMAIL_HOST_USER=noreply@algaddaftechnologyhub.com
+EMAIL_HOST_PASSWORD=...                     # that mailbox's own password
+DEFAULT_FROM_EMAIL=Algaddaf Tech Hub <noreply@algaddaftechnologyhub.com>
+
+CONTACT_EMAIL=info@algaddaftechnologyhub.com
+CONTACT_EMAIL_HOST_USER=info@algaddaftechnologyhub.com
+CONTACT_EMAIL_HOST_PASSWORD=...             # that mailbox's own password
+```
+Leaving `CONTACT_EMAIL_HOST_USER` unset is safe — `send_from_info()` falls
+back to the noreply@ connection until the second mailbox is configured.
 
 Handoffs appear in Django admin under **Support → Contacts** (read-only, status
 editable, filter by status/source).
