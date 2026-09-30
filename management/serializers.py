@@ -18,8 +18,12 @@ class ManualCertificateSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'recipient_name', 'course', 'course_name',
             'grade', 'grade_display', 'certificate_id', 'issued_at', 'created_by_name',
+            'emailed_to', 'emailed_at',
         ]
-        read_only_fields = ['id', 'certificate_id', 'issued_at', 'created_by_name']
+        read_only_fields = [
+            'id', 'certificate_id', 'issued_at', 'created_by_name',
+            'emailed_to', 'emailed_at',
+        ]
         # Drop the auto unique-together validator: the generate view intentionally
         # reuses an existing (recipient, course) certificate so its ID stays stable.
         validators = []
@@ -162,6 +166,14 @@ class SiwesLetterSerializer(serializers.ModelSerializer):
 class EmailSiwesLetterSerializer(serializers.Serializer):
     """Validates a request to email an already-generated letter."""
     letter_id = serializers.UUIDField()
+    email = serializers.EmailField()
+    subject = serializers.CharField(required=False, allow_blank=True, max_length=200)
+    message = serializers.CharField(required=False, allow_blank=True, max_length=5000)
+
+
+class EmailManualCertificateSerializer(serializers.Serializer):
+    """Validates a request to email an already-generated certificate."""
+    id = serializers.UUIDField()
     email = serializers.EmailField()
     subject = serializers.CharField(required=False, allow_blank=True, max_length=200)
     message = serializers.CharField(required=False, allow_blank=True, max_length=5000)

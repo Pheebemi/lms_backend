@@ -139,6 +139,12 @@ class ManualCertificate(models.Model):
         related_name='manual_certificates_created',
     )
 
+    # Set when the certificate is emailed from the history list. Blank until
+    # then; overwritten (not appended) on each send, so this reflects the most
+    # recent recipient rather than a full send log.
+    emailed_to = models.EmailField(blank=True)
+    emailed_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         db_table = 'manual_certificates'
         ordering = ['-issued_at']
