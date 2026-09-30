@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -12,6 +13,7 @@ from .serializers import (
     StudentRecordSerializer,
     StudentRecordListSerializer,
     ManualCertificateSerializer,
+    EmailManualCertificateSerializer,
     SiwesLetterSerializer,
     EmailSiwesLetterSerializer,
 )
@@ -139,6 +141,22 @@ class ManualCertificateListView(generics.ListAPIView):
         return qs
 
 
+def _render_certificate(certificate):
+    """Render a stored certificate to PNG. Returns (png_bytes, download_filename)."""
+    from courses.certificate_generator import generate_certificate_png
+
+    img_buffer = generate_certificate_png(
+        student_name=certificate.recipient_name,
+        course_title=certificate.course.name,
+        certificate_id=certificate.certificate_id,
+        completed_date=certificate.issued_at,
+        grade=certificate.grade,
+    )
+    safe_name = certificate.recipient_name.replace(' ', '_')
+    filename = f'certificate_{certificate.certificate_id}_{safe_name}.png'
+    return img_buffer.read(), filename
+
+
 class GenerateManualCertificateView(APIView):
     """
     Manually issue a certificate from the management dashboard.
@@ -147,56 +165,118 @@ class GenerateManualCertificateView(APIView):
     a stable certificate ID for that recipient + course, renders the certificate
     PNG and returns it as a download. Regenerating for the same recipient + course
     always reuses the same certificate ID.
+
+    Passing `id` (the stored certificate's UUID) re-renders an existing
+    certificate as-is — that is what the Download action in the history list
+    sends.
     """
     permission_classes = [IsManagementOrAdmin]
 
     def post(self, request):
-        serializer = ManualCertificateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        recipient_name = serializer.validated_data['recipient_name']
-        course = serializer.validated_data['course']
-        grade = serializer.validated_data.get('grade', '')
-
-        # Reuse an existing certificate for the same recipient + course so the ID
-        # is stable across regenerations (case-insensitive name match).
-        certificate = (
-            ManualCertificate.objects
-            .filter(recipient_name__iexact=recipient_name, course=course)
-            .first()
-        )
-        if certificate is None:
-            certificate = ManualCertificate.objects.create(
-                recipient_name=recipient_name,
-                course=course,
-                grade=grade,
-                created_by=request.user,
+        certificate_pk = request.data.get('id')
+        if certificate_pk:
+            try:
+                certificate_pk = uuid.UUID(str(certificate_pk))
+            except ValueError:
+                return Response(
+                    {'id': ['Not a valid certificate id.']},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            certificate = get_object_or_404(
+                ManualCertificate.objects.select_related('course'), pk=certificate_pk
             )
-        elif certificate.grade != grade:
-            # Keep the same ID but allow the grade to be corrected
-            certificate.grade = grade
-            certificate.save(update_fields=['grade'])
+        else:
+            serializer = ManualCertificateSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
 
-        # Render the certificate PNG
-        from courses.certificate_generator import generate_certificate_png
+            recipient_name = serializer.validated_data['recipient_name']
+            course = serializer.validated_data['course']
+            grade = serializer.validated_data.get('grade', '')
 
-        img_buffer = generate_certificate_png(
-            student_name=certificate.recipient_name,
-            course_title=course.name,
-            certificate_id=certificate.certificate_id,
-            completed_date=certificate.issued_at,
-            grade=certificate.grade,
-        )
+            # Reuse an existing certificate for the same recipient + course so the ID
+            # is stable across regenerations (case-insensitive name match).
+            certificate = (
+                ManualCertificate.objects
+                .filter(recipient_name__iexact=recipient_name, course=course)
+                .first()
+            )
+            if certificate is None:
+                certificate = ManualCertificate.objects.create(
+                    recipient_name=recipient_name,
+                    course=course,
+                    grade=grade,
+                    created_by=request.user,
+                )
+            elif certificate.grade != grade:
+                # Keep the same ID but allow the grade to be corrected
+                certificate.grade = grade
+                certificate.save(update_fields=['grade'])
 
-        response = HttpResponse(img_buffer.read(), content_type='image/png')
-        safe_name = certificate.recipient_name.replace(' ', '_')
-        response['Content-Disposition'] = (
-            f'attachment; filename="certificate_{certificate.certificate_id}_{safe_name}.png"'
-        )
+        png_bytes, filename = _render_certificate(certificate)
+
+        response = HttpResponse(png_bytes, content_type='image/png')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
         # Expose the ID to the browser fetch so the UI can display it
         response['X-Certificate-Id'] = certificate.certificate_id
         response['Access-Control-Expose-Headers'] = 'X-Certificate-Id, Content-Disposition'
         return response
+
+
+class EmailManualCertificateView(APIView):
+    """
+    Email an already-generated certificate as a PNG attachment.
+
+    Re-renders the image from the stored certificate (nothing is kept on disk
+    between generate and email) rather than requiring the caller to re-upload
+    it. Subject and message are optional and default to a standard note
+    addressed to the recipient; when supplied they let the management user
+    write their own.
+    """
+    permission_classes = [IsManagementOrAdmin]
+
+    def post(self, request):
+        serializer = EmailManualCertificateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        certificate = get_object_or_404(
+            ManualCertificate.objects.select_related('course'), pk=data['id']
+        )
+
+        from .emails import (
+            send_certificate_email,
+            default_certificate_subject,
+            default_certificate_message,
+        )
+
+        png_bytes, filename = _render_certificate(certificate)
+        subject = data.get('subject', '').strip() or default_certificate_subject(certificate)
+        message = data.get('message', '').strip() or default_certificate_message(certificate)
+
+        try:
+            send_certificate_email(
+                certificate=certificate,
+                recipient_email=data['email'],
+                subject=subject,
+                message=message,
+                png_bytes=png_bytes,
+                filename=filename,
+            )
+        except Exception:
+            logger.exception(
+                'Failed to email certificate %s to %s', certificate.certificate_id, data['email']
+            )
+            return Response(
+                {'detail': 'Could not send the email. Please check the address and try again.'},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        from django.utils import timezone
+        certificate.emailed_to = data['email']
+        certificate.emailed_at = timezone.now()
+        certificate.save(update_fields=['emailed_to', 'emailed_at'])
+
+        return Response({'success': True, 'emailed_to': data['email']}, status=status.HTTP_200_OK)
 
 
 class ManagementStatsView(APIView):
