@@ -59,6 +59,17 @@ def support_chat(request):
             },
             timeout=settings.SUPPORT_AI_TIMEOUT,
         )
+        # raise_for_status() reports the status code but discards the body, and
+        # the body is where the provider says *why* it refused — a retired model
+        # id, a key without access to it, a blocked host. Log it before raising.
+        if resp.status_code >= 400:
+            logger.error(
+                'Support chat provider returned HTTP %s for model %r at %s. Response: %s',
+                resp.status_code,
+                settings.SUPPORT_AI_MODEL,
+                settings.SUPPORT_AI_API_URL,
+                resp.text[:600],
+            )
         resp.raise_for_status()
         data = resp.json()
         choice = data['choices'][0]
