@@ -4,7 +4,6 @@ Creates beautiful PNG certificates using PIL/Pillow
 """
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-from django.core.files.base import ContentFile
 from datetime import datetime
 import os
 
@@ -117,40 +116,4 @@ def generate_certificate_png(student_name, course_title, certificate_id, issued_
     img_buffer.seek(0)
     
     return img_buffer
-
-
-def save_certificate_image(certificate, student_name, course_title, certificate_id, issued_date=None, completed_date=None):
-    """
-    Generate and save certificate PNG to the certificate model
-    
-    Args:
-        certificate: Certificate model instance
-        student_name: Full name of the student
-        course_title: Title of the course
-        certificate_id: Unique certificate ID
-        issued_date: Date when certificate was issued
-    
-    Returns:
-        The certificate instance with image_file saved
-    """
-    # Generate the PNG
-    img_buffer = generate_certificate_png(
-        student_name=student_name,
-        course_title=course_title,
-        certificate_id=certificate_id,
-        issued_date=issued_date,
-        completed_date=completed_date
-    )
-    
-    # Create filename
-    filename = f"certificate_{certificate_id}_{certificate.student.id}.png"
-    
-    # Save to the certificate model
-    certificate.image_file.save(
-        filename,
-        ContentFile(img_buffer.read()),
-        save=True
-    )
-    
-    return certificate
 

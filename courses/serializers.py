@@ -382,28 +382,9 @@ class CertificateSerializer(serializers.ModelSerializer):
     image_file_url = serializers.SerializerMethodField()
     
     def get_image_file_url(self, obj):
-        """Return the full URL for the certificate image"""
-        if obj.image_file:
-            request = self.context.get('request')
-            if request:
-                try:
-                    # Use the regular media URL - Django should serve it correctly
-                    media_url = request.build_absolute_uri(obj.image_file.url)
-                    return media_url
-                except Exception:
-                    # Fallback: construct URL manually if build_absolute_uri fails
-                    from django.conf import settings
-                    if hasattr(obj.image_file, 'url'):
-                        file_url = obj.image_file.url
-                        if file_url.startswith('http'):
-                            return file_url
-                        # Construct absolute URL
-                        scheme = request.scheme
-                        host = request.get_host()
-                        return f"{scheme}://{host}{file_url}"
-            # Fallback to relative URL
-            return obj.image_file.url if hasattr(obj.image_file, 'url') else None
-        return None
+        """Signed link that draws the certificate image on demand (nothing is stored)."""
+        from .certificate_views import certificate_image_url
+        return certificate_image_url(obj, self.context.get('request'))
 
 
 class QuizSubmissionSerializer(serializers.Serializer):
@@ -444,28 +425,9 @@ class CertificateSerializer(serializers.ModelSerializer):
     image_file_url = serializers.SerializerMethodField()
     
     def get_image_file_url(self, obj):
-        """Return the full URL for the certificate image"""
-        if obj.image_file:
-            request = self.context.get('request')
-            if request:
-                try:
-                    # Use the regular media URL - Django should serve it correctly
-                    media_url = request.build_absolute_uri(obj.image_file.url)
-                    return media_url
-                except Exception:
-                    # Fallback: construct URL manually if build_absolute_uri fails
-                    from django.conf import settings
-                    if hasattr(obj.image_file, 'url'):
-                        file_url = obj.image_file.url
-                        if file_url.startswith('http'):
-                            return file_url
-                        # Construct absolute URL
-                        scheme = request.scheme
-                        host = request.get_host()
-                        return f"{scheme}://{host}{file_url}"
-            # Fallback to relative URL
-            return obj.image_file.url if hasattr(obj.image_file, 'url') else None
-        return None
+        """Signed link that draws the certificate image on demand (nothing is stored)."""
+        from .certificate_views import certificate_image_url
+        return certificate_image_url(obj, self.context.get('request'))
 
 
     """Serializer for detailed quiz views"""
@@ -706,28 +668,9 @@ class CertificateSerializer(serializers.ModelSerializer):
     image_file_url = serializers.SerializerMethodField()
     
     def get_image_file_url(self, obj):
-        """Return the full URL for the certificate image"""
-        if obj.image_file:
-            request = self.context.get('request')
-            if request:
-                try:
-                    # Use the regular media URL - Django should serve it correctly
-                    media_url = request.build_absolute_uri(obj.image_file.url)
-                    return media_url
-                except Exception:
-                    # Fallback: construct URL manually if build_absolute_uri fails
-                    from django.conf import settings
-                    if hasattr(obj.image_file, 'url'):
-                        file_url = obj.image_file.url
-                        if file_url.startswith('http'):
-                            return file_url
-                        # Construct absolute URL
-                        scheme = request.scheme
-                        host = request.get_host()
-                        return f"{scheme}://{host}{file_url}"
-            # Fallback to relative URL
-            return obj.image_file.url if hasattr(obj.image_file, 'url') else None
-        return None
+        """Signed link that draws the certificate image on demand (nothing is stored)."""
+        from .certificate_views import certificate_image_url
+        return certificate_image_url(obj, self.context.get('request'))
 
 
 
@@ -793,28 +736,9 @@ class CertificateSerializer(serializers.ModelSerializer):
     image_file_url = serializers.SerializerMethodField()
     
     def get_image_file_url(self, obj):
-        """Return the full URL for the certificate image"""
-        if obj.image_file:
-            request = self.context.get('request')
-            if request:
-                try:
-                    # Use the regular media URL - Django should serve it correctly
-                    media_url = request.build_absolute_uri(obj.image_file.url)
-                    return media_url
-                except Exception:
-                    # Fallback: construct URL manually if build_absolute_uri fails
-                    from django.conf import settings
-                    if hasattr(obj.image_file, 'url'):
-                        file_url = obj.image_file.url
-                        if file_url.startswith('http'):
-                            return file_url
-                        # Construct absolute URL
-                        scheme = request.scheme
-                        host = request.get_host()
-                        return f"{scheme}://{host}{file_url}"
-            # Fallback to relative URL
-            return obj.image_file.url if hasattr(obj.image_file, 'url') else None
-        return None
+        """Signed link that draws the certificate image on demand (nothing is stored)."""
+        from .certificate_views import certificate_image_url
+        return certificate_image_url(obj, self.context.get('request'))
 
 
 
