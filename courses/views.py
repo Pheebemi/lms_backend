@@ -758,22 +758,8 @@ def generate_certificate(request, enrollment_id):
             }
         )
         
-        # Generate PNG certificate image if it doesn't exist or if newly created
-        if not certificate.image_file or created:
-            from .certificate_generator import save_certificate_image
-            
-            student_name = f"{request.user.first_name} {request.user.last_name}"
-            certificate_id = certificate.certificate_id
-            
-            save_certificate_image(
-                certificate=certificate,
-                student_name=student_name,
-                course_title=enrollment.course.title,
-                certificate_id=certificate_id,
-                issued_date=certificate.issued_at,
-                completed_date=enrollment.completed_at
-            )
-        
+        # The image is not stored: the serializer's image_file_url is a signed
+        # link that draws it from this record on demand.
         serializer = CertificateSerializer(certificate, context={'request': request})
         
         if created:
@@ -812,7 +798,7 @@ def get_certificate_detail(request, certificate_id):
             student=request.user
         )
         
-        serializer = CertificateSerializer(certificate)
+        serializer = CertificateSerializer(certificate, context={'request': request})
         return Response(serializer.data)
         
     except Exception as e:
@@ -915,22 +901,8 @@ def generate_certificate(request, enrollment_id):
             }
         )
         
-        # Generate PNG certificate image if it doesn't exist or if newly created
-        if not certificate.image_file or created:
-            from .certificate_generator import save_certificate_image
-            
-            student_name = f"{request.user.first_name} {request.user.last_name}"
-            certificate_id = certificate.certificate_id
-            
-            save_certificate_image(
-                certificate=certificate,
-                student_name=student_name,
-                course_title=enrollment.course.title,
-                certificate_id=certificate_id,
-                issued_date=certificate.issued_at,
-                completed_date=enrollment.completed_at
-            )
-        
+        # The image is not stored: the serializer's image_file_url is a signed
+        # link that draws it from this record on demand.
         serializer = CertificateSerializer(certificate, context={'request': request})
         
         if created:
@@ -969,7 +941,7 @@ def get_certificate_detail(request, certificate_id):
             student=request.user
         )
         
-        serializer = CertificateSerializer(certificate)
+        serializer = CertificateSerializer(certificate, context={'request': request})
         return Response(serializer.data)
         
     except Exception as e:
@@ -1080,22 +1052,8 @@ def generate_certificate(request, enrollment_id):
             }
         )
         
-        # Generate PNG certificate image if it doesn't exist or if newly created
-        if not certificate.image_file or created:
-            from .certificate_generator import save_certificate_image
-            
-            student_name = f"{request.user.first_name} {request.user.last_name}"
-            certificate_id = certificate.certificate_id
-            
-            save_certificate_image(
-                certificate=certificate,
-                student_name=student_name,
-                course_title=enrollment.course.title,
-                certificate_id=certificate_id,
-                issued_date=certificate.issued_at,
-                completed_date=enrollment.completed_at
-            )
-        
+        # The image is not stored: the serializer's image_file_url is a signed
+        # link that draws it from this record on demand.
         serializer = CertificateSerializer(certificate, context={'request': request})
         
         if created:
@@ -1134,7 +1092,7 @@ def get_certificate_detail(request, certificate_id):
             student=request.user
         )
         
-        serializer = CertificateSerializer(certificate)
+        serializer = CertificateSerializer(certificate, context={'request': request})
         return Response(serializer.data)
         
     except Exception as e:

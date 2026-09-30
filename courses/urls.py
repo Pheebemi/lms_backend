@@ -62,7 +62,9 @@ urlpatterns = [
     path('student/certificates/generate/<int:enrollment_id>/', views.generate_certificate, name='generate-certificate'),
     path('student/certificates/<int:certificate_id>/', views.get_certificate_detail, name='certificate-detail'),
     
-    # Certificate Images (serve with proper headers)
+    # Certificate Images: drawn on demand from a signed, expiring link (nothing stored on disk)
+    path('certificates/render/<str:token>/', certificate_views.render_certificate_image, name='certificate-image-render'),
+    # Legacy: only serves image files written before certificates were rendered on demand
     re_path(r'^certificates/images/(?P<path>.*)$', certificate_views.serve_certificate_image, name='certificate-image'),
     
     # Payments
